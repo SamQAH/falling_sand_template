@@ -5,7 +5,10 @@
 #include<cstdlib>
 #include<stdlib.h>
 #include<unistd.h>
-#include <functional>
+#include<functional>
+#include<chrono>
+#include<thread>
+#include<windows.h>
 #include"tile.h"
 
 using namespace std;

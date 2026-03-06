@@ -1,35 +1,51 @@
 #include"tile.h"
 
-char to_display_char(TileType tp) {
-	char display_char = '#';
+char to_display_char(const TileType tp) {
 	switch (tp)
 	{
-	case TileType::VOID:
-		display_char = ' ';
-		break;
+	case TileType::EMPTY:
+		return ' ';
 	case TileType::GROUND:
-		display_char = '=';
-		break;
+		return '=';
 	case TileType::WATER:
-		display_char = '.';
-		break;
+		return '.';
 	case TileType::LAVA:
-		display_char = 'L';
-		break;
+		return 'L';
 	case TileType::SAND:
-		display_char = 's';
-		break;
+		return 's';
 	case TileType::STICKY_POWDER:
-		display_char = 'S';
-		break;
+		return 'S';
 	default:
-		display_char = '#';
-		break;
+		return '#';
 	}
-	return display_char;
+}
+
+std::string to_string(const TileType tp) {
+	switch (tp)
+	{
+	case TileType::BOOB:
+		return "Bounds";
+	case TileType::EMPTY:
+		return "Void";
+	case TileType::GROUND:
+		return "Ground";
+	case TileType::WATER:
+		return "Water";
+	case TileType::LAVA:
+		return "Lava";
+	case TileType::SAND:
+		return "Sand";
+	case TileType::STICKY_POWDER:
+		return "Sticky Powder";
+	default:
+		return "Unknown";
+	}
 }
 
 Location TileIter(std::function<TileType(int, int)> get) {
 	TileType curr_tp = get(0, 0);
+	if (get(0, 1) != TileType::BOOB) {
+		return Location{ 0,1,curr_tp };
+	}
 	return Location{ 0,0,curr_tp };
 }

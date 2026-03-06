@@ -18,6 +18,10 @@ viewer.o: viewer.h viewer.cpp
 tile.o: tile.h tile.cpp
 	$(CC) $(OP) -c tile.cpp
 
+fast:
+	$(CC) $(OP) -c logic.cpp -DVEC_UNSAFE
+	make
+
 clean:
 	rm *.o out.exe
 
@@ -25,5 +29,5 @@ test:
 	make
 	out.exe
 
-.PHONY: clean test
+.PHONY: clean test fast
 

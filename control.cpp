@@ -11,7 +11,7 @@ int main() {
 
 
 	bool running = true;
-	TileType tp = TileType::VOID;
+	TileType tp = TileType::EMPTY;
 	while (running) {
 		//system("cls");
 		viewer.print();
@@ -46,14 +46,18 @@ int main() {
 				tp = TileType::LAVA;
 			}
 			else {
-				tp = TileType::VOID;
+				tp = TileType::EMPTY;
 			}
-			cout << "set tile" << endl;
+			cout << "set tile " << to_string(tp) << " at " << temp_a << ", " << temp_b << endl;
 			logic.set_tile_at(temp_a, temp_b, tp);
 			break;
 		default:
-			cout << "step" << endl;
+			auto time_start = chrono::high_resolution_clock::now();
+			//Sleep(1); test timing works
 			logic.step();
+			auto time_end = chrono::high_resolution_clock::now();
+			chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
+			cout << "step: " << duration_ms.count() << "ms" << endl;
 			break;
 		}
 		
