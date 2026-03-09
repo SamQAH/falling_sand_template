@@ -1,4 +1,9 @@
+#ifndef LOGIC_H
+#define LOGIC_H
+
+#include"tile.h"
 #include"config.h"
+
 
 class Logic {
 	int width, height;
@@ -22,3 +27,5 @@ public:
 private:
 	int relative_width, relative_height;
 };
+
+#endif

@@ -1,6 +1,7 @@
-#include"config.h"
+#include"tile.h"
 #include"logic.h"
 #include"viewer.h"
+#include"config.h"
 
 int main() {
 	Logic logic(10, 10);
@@ -11,7 +12,7 @@ int main() {
 
 
 	bool running = true;
-	TileType tp = TileType::EMPTY;
+	TileType tp = TileType::VOID;
 	while (running) {
 		//system("cls");
 		viewer.print();
@@ -29,24 +30,11 @@ int main() {
 			break;
 		case 's':
 			iss >> temp_a >> temp_b >> buffer;
-			
-			if (buffer == "ground") {
-				tp = TileType::GROUND;
+			try {
+				tp = string_tile.at(buffer);
 			}
-			else if (buffer == "sand") {
-				tp = TileType::SAND;
-			}
-			else if (buffer == "sticky_powder") {
-				tp = TileType::STICKY_POWDER;
-			}
-			else if (buffer == "water") {
-				tp = TileType::WATER;
-			}
-			else if (buffer == "lava") {
-				tp = TileType::LAVA;
-			}
-			else {
-				tp = TileType::EMPTY;
+			catch (int e) {
+				cout << "Can not convert:" << buffer << " into TileType." << endl;
 			}
 			cout << "set tile " << to_string(tp) << " at " << temp_a << ", " << temp_b << endl;
 			logic.set_tile_at(temp_a, temp_b, tp);

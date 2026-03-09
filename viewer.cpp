@@ -1,4 +1,5 @@
 #include"viewer.h"
+#include"tile.h"
 
 Viewer::Viewer(MAPTYPE*& data) : map_data{data} {}
 

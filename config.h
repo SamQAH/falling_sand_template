@@ -1,4 +1,6 @@
 #include<vector>
+#include<map>
+#include<cmath>
 #include<iostream>
 #include<string>
 #include<sstream>
@@ -8,9 +10,8 @@
 #include<functional>
 #include<chrono>
 #include<thread>
-#include<windows.h>
-#include"tile.h"
+//#include<windows.h>
+
 
 using namespace std;
 
-typedef vector<vector<TileType>> MAPTYPE;

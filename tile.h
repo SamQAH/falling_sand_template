@@ -1,19 +1,48 @@
 #ifndef TILE_H
 #define TILE_H
 
-#include<string>
-#include<functional>
+#include"config.h"
 
 enum TileType
 {
 	BOOB,
-	EMPTY,
+	VOID,
 	GROUND,
 	SAND,
 	STICKY_POWDER,
 	WATER,
 	LAVA
 };
+
+typedef vector<vector<TileType>> MAPTYPE;
+
+struct TileMovementProperties {
+	bool isPositionStable;
+	bool isCanFall;
+	bool isCanFallUp;
+	bool isCanPyramid;
+	bool isCanPyramidUp;
+	bool isCanSpread;
+	bool isCanExpand;
+};
+struct TileProperties {
+	int updateFrequency;
+	int density;
+    int reactivity;
+	bool isChemStable;
+	TileMovementProperties moveProperties;
+};
+
+bool canFall(function<TileType(int, int)>);
+bool canFallUp(function<TileType(int, int)>);
+vector<int> canPyramid(function<TileType(int, int)>);
+vector<int> canPyramidUp(function<TileType(int, int)>);
+vector<int> canSpread(function<TileType(int, int)>);
+vector<int> canExpand(function<TileType(int, int)>);
+
+extern map<TileType, char> tile_display_char;
+extern map<TileType, string> tile_string;
+extern map<string, TileType> string_tile;
 
 struct Location {
 	int col;
@@ -23,23 +52,21 @@ struct Location {
 
 class AbstractTile {
 public:
-	virtual Location iterLogic(std::function<TileType(int, int)> get);
+	virtual Location iterLogic(function<TileType(int, int)> get);
 };
 
 class BasicTile : public AbstractTile {
-	Location iterLogic(std::function<TileType(int, int)> get);
+	Location iterLogic(function<TileType(int, int)> get);
 };
 /*
-tags/fields
-update frequency
-density
+* TODO just write, refactor later
 
 */
 char to_display_char(const TileType tp);
 
-std::string to_string(const TileType tp);
+string to_string(const TileType tp);
 
-Location TileIter(std::function<TileType(int, int)> get);
+Location TileIter(function<TileType(int, int)> get);
 
 
 #endif // !TILE_H
