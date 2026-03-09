@@ -6,7 +6,7 @@
 enum TileType
 {
 	BOOB,
-	VOID,
+	EMPTY,
 	GROUND,
 	SAND,
 	STICKY_POWDER,

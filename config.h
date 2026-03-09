@@ -10,7 +10,14 @@
 #include<functional>
 #include<chrono>
 #include<thread>
-//#include<windows.h>
+#include<System>
+
+#ifdef _WIN32
+#include<Windows.h>
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+#endif
 
 
 using namespace std;

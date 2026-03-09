@@ -2,7 +2,7 @@
 
 map<TileType, char> tile_display_char = {
 	{TileType::BOOB, '@'},
-	{TileType::VOID, ' '},
+	{TileType::EMPTY, ' '},
 	{TileType::GROUND, '='},
 	{TileType::WATER, '.' },
 	{TileType::LAVA, 'L'},
@@ -12,7 +12,7 @@ map<TileType, char> tile_display_char = {
 
 map<TileType, string> tile_string = {
 	{TileType::BOOB, "Bounds"},
-	{TileType::VOID, "Void"},
+	{TileType::EMPTY, "Empty"},
 	{TileType::GROUND, "Ground"},
 	{TileType::WATER, "Water"},
 	{TileType::LAVA, "Lava"},
@@ -22,7 +22,7 @@ map<TileType, string> tile_string = {
 
 map<string, TileType> string_tile = {
 	{"bounds", TileType::BOOB},
-	{"void", TileType::VOID},
+	{"empty", TileType::EMPTY},
 	{"ground", TileType::GROUND},
 	{"water", TileType::WATER},
 	{"lava", TileType::LAVA},

@@ -6,8 +6,8 @@ Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { 
 		map_1[i] = vector<TileType>(width);
 		map_2[i] = vector<TileType>(width);
 		for (int j = 0; j < width; j++) {
-			map_1[i][j] = TileType::VOID;
-			map_2[i][j] = TileType::VOID;
+			map_1[i][j] = TileType::EMPTY;
+			map_2[i][j] = TileType::EMPTY;
 		}
 }
 #else
@@ -15,8 +15,8 @@ Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { 
 		map_1.at(i) = vector<TileType>(width);
 		map_2.at(i) = vector<TileType>(width);
 		for (int j = 0; j < width; j++) {
-			map_1.at(i).at(j) = TileType::VOID;
-			map_2.at(i).at(j) = TileType::VOID;
+			map_1.at(i).at(j) = TileType::EMPTY;
+			map_2.at(i).at(j) = TileType::EMPTY;
 		}
 	}
 #endif
@@ -41,7 +41,7 @@ void Logic::step() {
 		for (int col = 0; col < width; col++) {
 			set_get_tile_relative(col, row);
 			Location loc = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
-			cout << loc.row << loc.col << to_string(loc.tp) << endl;
+			cerr << loc.row << loc.col << to_string(loc.tp) << endl;
 #ifdef VEC_UNSAFE
 			(*inactive_map)[row + loc.row][col + loc.col] = loc.tp;
 #else

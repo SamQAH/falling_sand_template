@@ -12,7 +12,7 @@ int main() {
 
 
 	bool running = true;
-	TileType tp = TileType::VOID;
+	TileType tp = TileType::EMPTY;
 	while (running) {
 		//system("cls");
 		viewer.print();
