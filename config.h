@@ -1,4 +1,5 @@
 #include<vector>
+#include<list>
 #include<map>
 #include<cmath>
 #include<iostream>
@@ -10,7 +11,6 @@
 #include<functional>
 #include<chrono>
 #include<thread>
-#include<System>
 
 #ifdef _WIN32
 #include<Windows.h>

@@ -41,7 +41,7 @@ void Logic::step() {
 		for (int col = 0; col < width; col++) {
 			set_get_tile_relative(col, row);
 			Location loc = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
-			cerr << loc.row << loc.col << to_string(loc.tp) << endl;
+			// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
 #ifdef VEC_UNSAFE
 			(*inactive_map)[row + loc.row][col + loc.col] = loc.tp;
 #else

@@ -5,7 +5,7 @@
 
 int main() {
 	Logic logic(10, 10);
-	Viewer viewer(logic.get_active_map());
+	Viewer viewer(cout, logic.get_active_map());
 
 	logic.set_tile_at(3, 3, TileType::GROUND);
 	logic.set_tiles_rect(4, 3, 2, 1, TileType::WATER);
@@ -34,9 +34,9 @@ int main() {
 				tp = string_tile.at(buffer);
 			}
 			catch (int e) {
-				cout << "Can not convert:" << buffer << " into TileType." << endl;
+				viewer << ("Can not convert:" + buffer + " into TileType.");
 			}
-			cout << "set tile " << to_string(tp) << " at " << temp_a << ", " << temp_b << endl;
+			viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
 			logic.set_tile_at(temp_a, temp_b, tp);
 			break;
 		default:
@@ -45,7 +45,7 @@ int main() {
 			logic.step();
 			auto time_end = chrono::high_resolution_clock::now();
 			chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
-			cout << "step: " << duration_ms.count() << "ms" << endl;
+			viewer << ("step: " + to_string(duration_ms.count()) + "ms");
 			break;
 		}
 		
