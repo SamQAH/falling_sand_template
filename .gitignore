@@ -1,5 +1,7 @@
 .gitignore
 .gitattributes
+.vs/*
+*.txt
 
 # Prerequisites
 *.d
