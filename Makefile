@@ -1,6 +1,6 @@
 
 CC = g++
-OP = -Wall
+OP = -Wall -MMD -O0
 OT = -o out.exe
 
 out.exe: control.o logic.o viewer.o tile.o
@@ -23,11 +23,11 @@ fast:
 	make
 
 clean:
-	rm *.o out.exe
+	rm *.o *.d out.exe
 
 test:
 	make
-	out.exe
+	out.exe 2> error.txt
 
 .PHONY: clean test fast
 

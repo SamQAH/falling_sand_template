@@ -26,6 +26,8 @@ public:
 
 private:
 	int relative_width, relative_height;
+	int step_count = 0;
+	bool isCurrentLogicStep(int row, int col);
 };
 
 #endif

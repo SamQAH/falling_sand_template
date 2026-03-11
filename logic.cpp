@@ -34,21 +34,34 @@ TileType Logic::get_tile_at_relative(int width, int height) {
 
 /*
 use only swap tiles?
-update 9 times 3 by 3?
+update 9 times 3 by 3? 4 by 4 Bayean filte
 */
+bool Logic::isCurrentLogicStep(int row, int col) {
+	vector<int> table = { 0b0000, 0b1010, 0b0010, 0b1000, 0b0101, 0b1111, 0b0111, 0b1101, 0b0001, 0b1011, 0b0011, 0b1001, 0b0100, 0b1110, 0b0110, 0b1100 };
+	return table.at(step_count & 15) == (row & 3 + ((col & 3) * 4));
+}
+
 void Logic::step() {
+	*inactive_map = *active_map;
 	for (int row = 0; row < height; row++) {
 		for (int col = 0; col < width; col++) {
+			if (!isCurrentLogicStep(row, col)) continue;
+			int tile_freq = tile_properties.at(active_map->at(row).at(col)).updateFrequency;
+			if (tile_freq < 0 || (step_count / 16) % tile_freq != 0) continue;
 			set_get_tile_relative(col, row);
-			Location loc = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
-			// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
+			list<Location> request_actions = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
+			for (auto& loc : request_actions) {
+				// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
 #ifdef VEC_UNSAFE
-			(*inactive_map)[row + loc.row][col + loc.col] = loc.tp;
+				(*inactive_map)[row + loc.row][col + loc.col] = loc.tp;
 #else
-			inactive_map->at(row + loc.row).at(col + loc.col) = loc.tp;
+				inactive_map->at(row + loc.row).at(col + loc.col) = loc.tp;
 #endif
+			}
+
 		}
 	}
+	step_count++;
 	swap(active_map, inactive_map);
 }
 

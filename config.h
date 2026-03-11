@@ -11,6 +11,7 @@
 #include<functional>
 #include<chrono>
 #include<thread>
+#include<random>
 
 #ifdef _WIN32
 #include<Windows.h>

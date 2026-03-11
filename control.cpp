@@ -21,7 +21,7 @@ int main() {
 		int temp_b;
 		char temp_char = '\n';
 		getline(cin, buffer);
-		istringstream iss{buffer};
+		istringstream iss{ buffer };
 		iss >> temp_char;
 		switch (temp_char)
 		{
@@ -48,7 +48,5 @@ int main() {
 			viewer << ("step: " + to_string(duration_ms.count()) + "ms");
 			break;
 		}
-		
 	}
-	return 0;
 }
