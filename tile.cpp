@@ -84,7 +84,7 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 	list<Location> requests;
 	TileType curr_tp = get(0, 0);
 	if (get(0, 1) != TileType::BOOB) {
-		requests.emplace_back{ Location{ 0,1,curr_tp } };
+		requests.emplace_back( Location{ 0,1,curr_tp } );
 	}
 	return requests;
 }
