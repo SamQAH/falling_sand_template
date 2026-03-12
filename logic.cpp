@@ -32,13 +32,14 @@ TileType Logic::get_tile_at_relative(int width, int height) {
 	return get_tile_at(relative_width + width, relative_height + height);
 }
 
-/*
-use only swap tiles?
-update 9 times 3 by 3? 4 by 4 Bayean filte
-*/
 bool Logic::isCurrentLogicStep(int row, int col) {
-	vector<int> table = { 0b0000, 0b1010, 0b0010, 0b1000, 0b0101, 0b1111, 0b0111, 0b1101, 0b0001, 0b1011, 0b0011, 0b1001, 0b0100, 0b1110, 0b0110, 0b1100 };
-	return table.at(step_count & 15) == (row & 3 + ((col & 3) * 4));
+	return (step_count & 1) == ((row + col) & 1);
+}
+
+void Logic::full_step() {
+	for (int i = 0; i < num_step_full; i++) {
+		step();
+	}
 }
 
 void Logic::step() {
@@ -47,7 +48,7 @@ void Logic::step() {
 		for (int col = 0; col < width; col++) {
 			if (!isCurrentLogicStep(row, col)) continue;
 			int tile_freq = tile_properties.at(active_map->at(row).at(col)).updateFrequency;
-			if (tile_freq < 0 || (step_count / 16) % tile_freq != 0) continue;
+			if (tile_freq < 0 || (step_count / num_step_full) % tile_freq != 0) continue;
 			set_get_tile_relative(col, row);
 			list<Location> request_actions = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
 			for (auto& loc : request_actions) {

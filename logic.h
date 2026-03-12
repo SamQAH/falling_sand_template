@@ -16,6 +16,7 @@ public:
 	Logic(int width, int height);
 	~Logic() = default;
 	void step();
+	void full_step();
 	MAPTYPE*& get_active_map();
 	bool set_tile_at(int width, int height, TileType tp);
 	TileType get_tile_at(int width, int height);
@@ -27,6 +28,8 @@ public:
 private:
 	int relative_width, relative_height;
 	int step_count = 0;
+	const int num_step_full = 2;
+	int full_step_count = 0;
 	bool isCurrentLogicStep(int row, int col);
 };
 

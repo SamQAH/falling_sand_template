@@ -27,7 +27,7 @@ int main() {
 		{
 		case 'd':
 			running = false;
-			break;
+			brea
 		case 's':
 			iss >> temp_a >> temp_b >> buffer;
 			try {
