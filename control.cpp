@@ -4,12 +4,12 @@
 #include"config.h"
 
 int main() {
-	Logic logic(10, 10);
+	Logic logic(20, 15);
 	Viewer viewer(cout, logic.get_active_map());
 
-	logic.set_tile_at(3, 3, TileType::GROUND);
-	logic.set_tiles_rect(4, 3, 2, 1, TileType::WATER);
-
+	logic.set_tiles_rect(2, 1, 16, 3, TileType::WATER);
+	logic.set_tiles_rect(5, 5, 10, 7, TileType::GROUND);
+	logic.set_tiles_rect(6, 6, 8, 4, TileType::LAVA);
 
 	bool running = true;
 	TileType tp = TileType::EMPTY;
@@ -20,6 +20,11 @@ int main() {
 		int temp_a;
 		int temp_b;
 		char temp_char = '\n';
+		auto time_start = chrono::high_resolution_clock::now();
+		auto time_end = chrono::high_resolution_clock::now();
+		chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
+		bool use_full_step = true;
+
 		getline(cin, buffer);
 		istringstream iss{ buffer };
 		iss >> temp_char;
@@ -27,7 +32,7 @@ int main() {
 		{
 		case 'd':
 			running = false;
-			brea
+			break;
 		case 's':
 			iss >> temp_a >> temp_b >> buffer;
 			try {
@@ -39,12 +44,24 @@ int main() {
 			viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
 			logic.set_tile_at(temp_a, temp_b, tp);
 			break;
+		case 't':
+			iss >> temp_a;
+			time_start = chrono::high_resolution_clock::now();
+			for (int i = 0; i < temp_a; i++) {
+				logic.full_step();
+			}
+			time_end = chrono::high_resolution_clock::now();
+			duration_ms = (time_end - time_start);
+			viewer << ("sprint: " + to_string(duration_ms.count()) + "ms");
+			break;
+		case 'k':
+			use_full_step = !use_full_step;
+			break;
 		default:
-			auto time_start = chrono::high_resolution_clock::now();
-			//Sleep(1); test timing works
-			logic.step();
-			auto time_end = chrono::high_resolution_clock::now();
-			chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
+			time_start = chrono::high_resolution_clock::now();
+			use_full_step ? logic.full_step() : logic.step();
+			time_end = chrono::high_resolution_clock::now();
+			duration_ms = (time_end - time_start);
 			viewer << ("step: " + to_string(duration_ms.count()) + "ms");
 			break;
 		}

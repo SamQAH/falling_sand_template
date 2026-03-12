@@ -6,6 +6,7 @@ map<TileType, char> tile_display_char = {
 	{TileType::EMPTY, ' '},
 	{TileType::GROUND, '='},
 	{TileType::WATER, '.' },
+	{TileType::STEAM, '\'' },
 	{TileType::LAVA, 'L'},
 	{TileType::SAND, 's'},
 	{TileType::STICKY_POWDER, 'S'}
@@ -16,6 +17,7 @@ map<TileType, string> tile_string = {
 	{TileType::EMPTY, "Empty"},
 	{TileType::GROUND, "Ground"},
 	{TileType::WATER, "Water"},
+	{TileType::STEAM, "Steam"},
 	{TileType::LAVA, "Lava"},
 	{TileType::SAND, "Sand"},
 	{TileType::STICKY_POWDER, "Sticky Powder"}
@@ -26,11 +28,21 @@ map<string, TileType> string_tile = {
 	{"empty", TileType::EMPTY},
 	{"ground", TileType::GROUND},
 	{"water", TileType::WATER},
+	{"steam", TileType::STEAM},
 	{"lava", TileType::LAVA},
 	{"sand", TileType::SAND},
 	{"sticky powder", TileType::STICKY_POWDER}
 };
 
+/* reactions and movement
+{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::WATER, TileType::GROUND, TileType::STEAM}
+{ChemReactionType::ONE_TO_ONE, TileType::STEAM, TileType::BOOB, TileType::WATER, TileType::BOOB}
+{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::GROUND, TileType::LAVA, TileType::LAVA}
+
+{ {DirectionVector::DOWN}, {1} }
+{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }
+{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} }
+*/
 map<TileType, TileProperties> tile_properties = {
 	{TileType::BOOB, { -1,
 						{ 0, {} },
@@ -38,23 +50,32 @@ map<TileType, TileProperties> tile_properties = {
 	},
 	{TileType::EMPTY, { -1,
 						{ 0, {} },
-						{ true, 1000, {} } }
+						{ true, 0, {} } }
 	},
 	{TileType::GROUND, { -1,
-						{ 1, {} },
+						{ 0.05, {} },
 						{ true, 10, {} } }
 	},
 	{TileType::WATER, { 2,
-						{ 1, {} },
-						{ false, 5, {} } }
+						{ 0.3, {} },
+						{ false, 5, { MoveLogicProbabilityLayer{ {DirectionVector::DOWN}, {1} }, 
+									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }, 
+									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} } } } }
 	},
-	{TileType::LAVA, { 8,
-						{ 1, {} },
-						{ false, 9, {} } }
+	{TileType::STEAM, { 2,
+						{ 0.01, { {TileType::BOOB, { ChemReaction{ChemReactionType::ONE_TO_ONE, TileType::STEAM, TileType::BOOB, TileType::WATER, TileType::BOOB} } } } },
+						{ false, 5, { MoveLogicProbabilityLayer{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} } } } }
+	},
+	{TileType::LAVA, { 4,
+						{ 0.9, { {TileType::WATER, { ChemReaction{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::WATER, TileType::GROUND, TileType::STEAM} } },
+								{TileType::GROUND, { ChemReaction{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::GROUND, TileType::LAVA, TileType::LAVA} } } } },
+						{ false, 9, { MoveLogicProbabilityLayer{ {DirectionVector::DOWN}, {1} }, 
+									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }, 
+									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} } } } }
 	},
 	{TileType::SAND, { 1,
-						{ 1, {} },
-						{ false, 7, {} } }
+						{ 0.1, {} },
+						{ false, 7, { { {DirectionVector::DOWN}, {1} }, { {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} } } } }
 	},
 	{TileType::STICKY_POWDER, { 4,
 						{ 1, {} },
@@ -93,8 +114,8 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 	for (auto adjIter = adjacencies.begin(); adjIter != adjacencies.end() && cp.reactivity != 0; ++adjIter) {
 		Location& loc = *adjIter;
 		auto iter = cp.possible_reactions.find(loc.tp);
-		float random = (rand() % 128) / 128;
-		if (iter == cp.possible_reactions.end() || cp.reactivity * tile_properties.at(loc.tp).chemProperties.reactivity > random) continue;
+		float random = (float)(rand() % 128) / 128;
+		if (iter == cp.possible_reactions.end() || cp.reactivity * tile_properties.at(loc.tp).chemProperties.reactivity < random) continue;
 		// reaction will now occur
 		const vector<ChemReaction>& crt = iter->second;
 		const ChemReaction& choosenReaction = crt.at(rand() % crt.size());
@@ -131,13 +152,13 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 		}
 	}
 	// self reactions
-	{
+	for (int i = 0; i < 1; i++) {
 		auto iter = cp.possible_reactions.find(TileType::BOOB);
 		if (iter != cp.possible_reactions.end()) {
 			const vector<ChemReaction>& crt = iter->second;
 			const ChemReaction& choosenReaction = crt.at(rand() % crt.size());
-			float random = (rand() % 128) / 128;
-			if (cp.reactivity > random) break;
+			float random = (float)(rand() % 128) / 128;
+			if (cp.reactivity < random) break;
 			switch (choosenReaction.reactionType)
 			{
 			case ChemReactionType::ONE_TO_ONE:
@@ -156,10 +177,10 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 	if (currtpChanged) return requests;
 	
 	// physical
-	for (auto& moveIter = mp.logicLayers.begin(); moveIter != mp.logicLayers.end() && !(mp.isPositionStable); ++moveIter) {
+	for (auto moveIter = mp.logicLayers.begin(); moveIter != mp.logicLayers.end() && !(mp.isPositionStable); ++moveIter) {
 		MoveLogicProbabilityLayer& tmp = *moveIter;
-		float random = (rand() % 128) / 128;
-		int choice_index = 0;
+		float random = (float)(rand() % 128) / 128;
+		size_t choice_index = 0;
 		for (; choice_index < tmp.probs.size(); choice_index++) {
 			if (tmp.probs.at(choice_index) > random) break;
 		}

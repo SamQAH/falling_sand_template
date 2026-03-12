@@ -11,7 +11,8 @@ enum TileType
 	SAND,
 	STICKY_POWDER,
 	WATER,
-	LAVA
+	LAVA,
+	STEAM
 };
 
 typedef vector<vector<TileType>> MAPTYPE;
