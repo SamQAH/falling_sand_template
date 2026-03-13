@@ -64,6 +64,13 @@ struct TileChemicalProperties {
 	float reactivity;
 	map<TileType, vector<ChemReaction>> possible_reactions; // probably faster than vector<ChemReaction>
 };
+/* flattened summary
+updateFrequency
+possible_chemical_reactions
+positionally_stable
+density
+move_logic_layers, each layer has its own probabilities
+*/
 struct TileProperties {
 	int updateFrequency; // for logic module to know when to call
 	TileChemicalProperties chemProperties;
@@ -90,8 +97,14 @@ struct Location {
 // not used
 class AbstractTile {
 public:
-	virtual Location iterLogic(function<TileType(int, int)> get);
+	virtual char to_char() = 0;
+	virtual string to_string() = 0;
+	virtual uint_fast8_t get_update_frequency() = 0;
+	virtual list<Location> iterLogic(function<TileType(int, int)> get) = 0;
+	virtual ~AbstractTile() = 0;
 };
+
+
 //not used
 class BasicTile : public AbstractTile {
 	Location iterLogic(function<TileType(int, int)> get);
