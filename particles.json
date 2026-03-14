@@ -1,0 +1,28 @@
+{
+    "WATER":{
+        "updateFrequency": 2,
+        "reactivity": 0.3,
+        "reactions": [],
+        "physics": {
+            "stable": false,
+            "density": 5,
+            "layers": [
+                {"choices": ["DOWN"], "probs":[1] },
+                {"choices": ["LEFT", "RIGHT"], "probs":[0.5, 1]   }
+            ]
+        }
+    },
+    "SAND":{
+        "updateFrequency": 1,
+        "reactivity": 0.1,
+        "reactions": [],
+        "physics": {
+            "stable": false,
+            "density": 7,
+            "layers": [
+                {"choices": ["DOWN"], "probs":[1] },
+                {"choices": ["LEFT", "RIGHT"], "probs":[0.5, 1]   }
+            ]
+        }
+    }
+}
