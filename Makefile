@@ -3,7 +3,7 @@ CC = g++
 OP = -Wall -MMD -O0
 OT = -o out.exe
 
-out.exe: control.o logic.o viewer.o tile.o
+out.exe: control.o logic.o viewer.o tile.o parser.o
 	$(CC) $(OP) *.o $(OT)
 
 control.o: control.h control.cpp
@@ -18,6 +18,8 @@ viewer.o: viewer.h viewer.cpp
 tile.o: tile.h tile.cpp
 	$(CC) $(OP) -c tile.cpp
 
+parser.o: parser.h parser.cpp
+	$(CC) $(OP) -c parser.cpp
 fast:
 	$(CC) $(OP) -c logic.cpp -DVEC_UNSAFE
 	make

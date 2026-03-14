@@ -20,7 +20,16 @@ map<TileType, string> tile_string = {
 	{TileType::STEAM, "Steam"},
 	{TileType::LAVA, "Lava"},
 	{TileType::SAND, "Sand"},
-	{TileType::STICKY_POWDER, "Sticky Powder"}
+	{TileType::STICKY_POWDER, "Sticky Powder"},
+// --- ADDED THESE FOR THE JSON PARSER ---
+    {"BOOB", TileType::BOOB},
+    {"EMPTY", TileType::EMPTY},
+    {"GROUND", TileType::GROUND},
+    {"WATER", TileType::WATER},
+    {"STEAM", TileType::STEAM},
+    {"LAVA", TileType::LAVA},
+    {"SAND", TileType::SAND},
+    {"STICKY_POWDER", TileType::STICKY_POWDER}
 };
 
 map<string, TileType> string_tile = {
@@ -43,45 +52,7 @@ map<string, TileType> string_tile = {
 { {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }
 { {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} }
 */
-map<TileType, TileProperties> tile_properties = {
-	{TileType::BOOB, { -1,
-						{ 0, {} },
-						{ true, 1000, {} } }
-	},
-	{TileType::EMPTY, { -1,
-						{ 0, {} },
-						{ true, 0, {} } }
-	},
-	{TileType::GROUND, { -1,
-						{ 0.05, {} },
-						{ true, 10, {} } }
-	},
-	{TileType::WATER, { 2,
-						{ 0.3, {} },
-						{ false, 5, { MoveLogicProbabilityLayer{ {DirectionVector::DOWN}, {1} }, 
-									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }, 
-									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} } } } }
-	},
-	{TileType::STEAM, { 2,
-						{ 0.01, { {TileType::BOOB, { ChemReaction{ChemReactionType::ONE_TO_ONE, TileType::STEAM, TileType::BOOB, TileType::WATER, TileType::BOOB} } } } },
-						{ false, 5, { MoveLogicProbabilityLayer{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} } } } }
-	},
-	{TileType::LAVA, { 4,
-						{ 0.9, { {TileType::WATER, { ChemReaction{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::WATER, TileType::GROUND, TileType::STEAM} } },
-								{TileType::GROUND, { ChemReaction{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::GROUND, TileType::LAVA, TileType::LAVA} } } } },
-						{ false, 9, { MoveLogicProbabilityLayer{ {DirectionVector::DOWN}, {1} }, 
-									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }, 
-									  MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} } } } }
-	},
-	{TileType::SAND, { 1,
-						{ 0.1, {} },
-						{ false, 7, { { {DirectionVector::DOWN}, {1} }, { {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} } } } }
-	},
-	{TileType::STICKY_POWDER, { 4,
-						{ 1, {} },
-						{ false, 7, {} } }
-	}
-};
+map<TileType, TileProperties> tile_properties;
 
 
 char to_display_char(const TileType tp) {
