@@ -3,7 +3,9 @@
 
 #include"config.h"
 
-enum TileType
+typedef char TILEDATATYPE;
+
+enum TileType : TILEDATATYPE
 {
 	BOOB, // use as sentinal value
 	EMPTY,
@@ -59,6 +61,7 @@ enum ChemReactionType {
 struct ChemReaction {
 	ChemReactionType reactionType;
 	TileType reagent_one, reagent_two, resultant_one, resultant_two;
+	float reactivity;
 };
 struct TileChemicalProperties {
 	float reactivity;
@@ -96,19 +99,52 @@ struct Location {
 };
 // not used
 class AbstractTile {
+	friend class TileManager;
+private:
+	TILEDATATYPE id;
+	char displayChar;
+	string name;
+	size_t updateFrequency;
+	map<TileType, vector<ChemReaction>> chemicalReactions;
+	bool isPositionStable;
+	int density;
+	list<MoveLogicProbabilityLayer> moveLogicLayers;
+	virtual list<Location> chemIterLogic(function<TileType(int, int)> get);
+	virtual list<Location> moveIterLogic(function<TileType(int, int)> get);
+	virtual list<Location> extraIterLogic(function<TileType(int, int)> get);
 public:
-	virtual char to_char() = 0;
-	virtual string to_string() = 0;
-	virtual uint_fast8_t get_update_frequency() = 0;
-	virtual list<Location> iterLogic(function<TileType(int, int)> get) = 0;
+	AbstractTile();
+	TILEDATATYPE& get_id();
+	char& get_displayChar();
+	string& get_name();
+	size_t& get_updateFrequency();
+	map<TileType, vector<ChemReaction>>& get_chemicalReactions();
+	bool& get_isPositionStable();
+	int& get_density();
+	virtual list<Location> iterLogic(function<TileType(int, int)> get);
 	virtual ~AbstractTile() = 0;
 };
 
-
-//not used
-class BasicTile : public AbstractTile {
-	Location iterLogic(function<TileType(int, int)> get);
+// no chemical reactions, positionally stable
+class BoringTile : public AbstractTile {
+public:
+	BoringTile(TILEDATATYPE id);
+	~BoringTile();
 };
+
+// TileManager, manages tile information, must use this class to access
+class TileManager {
+private:
+	size_t first_free;
+	vector<shared_ptr<AbstractTile>> tiles;
+
+public:
+	TileManager();
+	~TileManager() = default;
+	shared_ptr<AbstractTile> at(TILEDATATYPE key);
+};
+
+
 
 // char to_display_char(tiletype) returns the byte representing the tiletype
 char to_display_char(const TileType tp);

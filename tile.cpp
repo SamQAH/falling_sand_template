@@ -197,3 +197,98 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 
 	return requests;
 }
+
+list<Location> AbstractTile::chemIterLogic(function<TileType(int, int)> get)
+{
+	return list<Location>();
+}
+
+list<Location> AbstractTile::moveIterLogic(function<TileType(int, int)> get)
+{
+	return list<Location>();
+}
+
+list<Location> AbstractTile::extraIterLogic(function<TileType(int, int)> get)
+{
+	return list<Location>();
+}
+
+AbstractTile::AbstractTile() : id{ 0 }, displayChar{ '?' }, name{ "unknown" }, updateFrequency{ 0 }, chemicalReactions{ }, isPositionStable{ true }, density{ 2147483647 }, moveLogicLayers{ }
+{
+}
+
+TILEDATATYPE& AbstractTile::get_id()
+{
+	return id;
+}
+
+char& AbstractTile::get_displayChar()
+{
+	return displayChar;
+}
+
+string& AbstractTile::get_name()
+{
+	return name;
+}
+
+size_t& AbstractTile::get_updateFrequency()
+{
+	return updateFrequency;
+}
+
+map<TileType, vector<ChemReaction>>& AbstractTile::get_chemicalReactions()
+{
+	return chemicalReactions;
+}
+
+bool& AbstractTile::get_isPositionStable()
+{
+	return isPositionStable;
+}
+
+int& AbstractTile::get_density()
+{
+	return density;
+}
+
+list<Location> AbstractTile::iterLogic(function<TileType(int, int)> get)
+{
+	list<Location> requests;
+	requests.splice(requests.end(), chemIterLogic(get));
+	if (requests.front().col == 0 && requests.front().row == 0) {
+		return requests;
+	}
+	requests.splice(requests.end(), moveIterLogic(get));
+
+	if (requests.front().col == 0 && requests.front().row == 0) {
+		return requests;
+	}
+	requests.splice(requests.end(), extraIterLogic(get));
+
+	return requests;
+}
+
+AbstractTile::~AbstractTile()
+{
+}
+
+BoringTile::BoringTile(TILEDATATYPE id)
+{
+	get_id() = id;
+}
+
+BoringTile::~BoringTile()
+{
+}
+
+TileManager::TileManager() : first_free{ 0 }, tiles{ 2 ^ (8 * sizeof(TILEDATATYPE)) }
+{
+	auto temp = make_shared<BoringTile>(0);
+	tiles.at(0) = temp;
+}
+
+shared_ptr<AbstractTile> TileManager::at(TILEDATATYPE key)
+{
+	return tiles.at(key) ? tiles.at(key) : tiles.at(0);
+}

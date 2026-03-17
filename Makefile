@@ -1,5 +1,5 @@
 
-CC = g++
+CC = g++ -std=c++11
 OP = -Wall -MMD -O0
 OT = -o out.exe
 
