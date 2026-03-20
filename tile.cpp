@@ -101,7 +101,8 @@ string to_string(const TileType tp) {
 		return "Unknown";
 	}
 }
-
+// TODO impl VEC_UNSAFE
+// TODO impl TileManager
 list<Location> TileIter(std::function<TileType(int, int)> get) {
 	list<Location> requests;
 	TileType curr_tp = get(0, 0);
@@ -200,22 +201,32 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 
 list<Location> AbstractTile::chemIterLogic(function<TileType(int, int)> get)
 {
-	return list<Location>();
+	list<Location> requests;
+	return requests;
 }
 
 list<Location> AbstractTile::moveIterLogic(function<TileType(int, int)> get)
 {
-	return list<Location>();
+	list<Location> requests;
+	return requests;
 }
 
 list<Location> AbstractTile::extraIterLogic(function<TileType(int, int)> get)
 {
-	return list<Location>();
+	list<Location> requests;
+	return requests;
 }
 
 AbstractTile::AbstractTile() : id{ 0 }, displayChar{ '?' }, name{ "unknown" }, updateFrequency{ 0 }, chemicalReactions{ }, isPositionStable{ true }, density{ 2147483647 }, moveLogicLayers{ }
 {
 }
+
+#ifdef JSON_PARSE_H
+AbstractTile::AbstractTile(const string& data)
+{
+	JsonObject m{ (istringstream)data };
+}
+#endif
 
 TILEDATATYPE& AbstractTile::get_id()
 {
@@ -247,38 +258,165 @@ bool& AbstractTile::get_isPositionStable()
 	return isPositionStable;
 }
 
+bool& AbstractTile::get_isChemicallyStable()
+{
+	return isChemicallyStable;
+}
+
 int& AbstractTile::get_density()
 {
 	return density;
 }
 
+list<MoveLogicProbabilityLayer>& AbstractTile::get_moveLogicLayers()
+{
+	return moveLogicLayers;
+}
+
 list<Location> AbstractTile::iterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
-	requests.splice(requests.end(), chemIterLogic(get));
-	if (requests.front().col == 0 && requests.front().row == 0) {
+	// chemical
+	if (!isChemicallyStable) {
+		requests.splice(requests.end(), chemIterLogic(get));
+	}
+	if (!(requests.empty()) && requests.front().col == 0 && requests.front().row == 0 && requests.front().tp != get(0, 0)) {
 		return requests;
 	}
-	requests.splice(requests.end(), moveIterLogic(get));
-
-	if (requests.front().col == 0 && requests.front().row == 0) {
+	// physical
+	if (!isPositionStable) {
+		requests.splice(requests.end(), moveIterLogic(get));
+	}
+	if (!(requests.empty()) && requests.front().col == 0 && requests.front().row == 0 && requests.front().tp != get(0, 0)) {
 		return requests;
 	}
+	// emotional
 	requests.splice(requests.end(), extraIterLogic(get));
 
 	return requests;
 }
 
-AbstractTile::~AbstractTile()
+AbstractTile::~AbstractTile() {}
+
+list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
 {
+	list<Location> requests;
+	map<TileType, vector<ChemReaction>>& chemRec = get_chemicalReactions();
+	vector<Location> adjacencies = { Location{ 0, -1, get(0, -1) }, Location{ 0, 1, get(0, 1) }, Location{ -1, 0, get(-1, 0) }, Location{ 1, 0, get(1, 0) } };
+	for (auto adjIter = adjacencies.begin(); adjIter != adjacencies.end(); ++adjIter) {
+		auto iter = chemRec.find(loc.tp);
+		if (iter == chemRec.end()) continue;
+		float random = (float)(rand() % 128) / 128;
+		vector<ChemReaction>& crt = iter->second;
+		ChemReaction choosenReaction;
+		float tempSum = 0;
+		bool choosedReact = false;
+		for (size_t i = 0; i < crt.size(); i++) {
+			tempSum += crt.at(i).probability;
+			if (tempSum < random) {
+				choosenReaction = crt.at(i);
+				choosedReact = true;
+			}
+		}
+		if (!choosedReact) continue;
+
+		// reaction will now occur
+		Location& loc = *adjIter;
+		switch (choosenReaction.reactionType)
+		{
+		case ChemReactionType::TWO_TO_TWO:
+			requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+			requests.emplace_back(Location{ loc.col, loc.row, choosenReaction.resultant_two });
+			loc.tp = choosenReaction.resultant_two;
+			break;
+		case ChemReactionType::CATALYTIC:
+			requests.emplace_back(Location{ loc.col, loc.row, choosenReaction.resultant_two });
+			loc.tp = choosenReaction.resultant_two;
+			break;
+		case ChemReactionType::SYNTHESIS:
+			requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+			requests.emplace_back(Location{ loc.col, loc.row, choosenReaction.resultant_two });
+			loc.tp = choosenReaction.resultant_two;
+			break;
+		case ChemReactionType::GENERATIVE:
+			requests.emplace_back(Location{ loc.col, loc.row, choosenReaction.resultant_two });
+			loc.tp = choosenReaction.resultant_two;
+			break;
+		case ChemReactionType::DECOMPOSE:
+			requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+			requests.emplace_back(Location{ loc.col, loc.row, choosenReaction.resultant_two });
+			loc.tp = choosenReaction.resultant_two;
+			break;
+		default:
+			break;
+		}
+	}
+	// self reactions
+	for (int i = 0; i < 1; i++) {
+		auto iter = chemRec.find(TileType::BOOB);
+		if (iter != chemRec.end()) {
+			vector<ChemReaction>& crt = iter->second;
+			float random = (float)(rand() % 128) / 128;
+			ChemReaction choosenReaction;
+			float tempSum = 0;
+			bool choosedReact = false;
+			for (size_t i = 0; i < crt.size(); i++) {
+				tempSum += crt.at(i).probability;
+				if (tempSum < random) {
+					choosenReaction = crt.at(i);
+					choosedReact = true;
+				}
+			}
+			if (!choosedReact) break;
+			// self reaction will now occur
+			switch (choosenReaction.reactionType)
+			{
+			case ChemReactionType::ONE_TO_ONE:
+				requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+				break;
+			case ChemReactionType::SELF_CATALYTIC:
+				requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	return requests;
 }
 
-BoringTile::BoringTile(TILEDATATYPE id)
+list<Location> BasicTile::moveIterLogic(function<TileType(int, int)> get)
+{
+	list<Location> requests;
+	list<MoveLogicProbabilityLayer>& mvLayers = get_moveLogicLayers();
+	for (auto moveIter = mvLayers.begin(); moveIter != mvLayers.end(); ++moveIter) {
+		MoveLogicProbabilityLayer& tmp = *moveIter;
+		float random = (float)(rand() % 128) / 128;
+		size_t choice_index = 0;
+		for (; choice_index < tmp.probs.size(); choice_index++) {
+			if (tmp.probs.at(choice_index) > random) break;
+		}
+		if (choice_index == tmp.probs.size()) break;
+		DirectionVector vec = tmp.choices.at(choice_index);
+		int vec_col = ((uint8_t)vec >> 4) - 1;
+		int vec_row = ((uint8_t)vec % 16) - 1;
+		Location otherLocCopy = {vec_col, vec_row, get(vec_col, vec_row)};
+		if (tile_properties.at(otherLocCopy.tp).moveProperties.density > mp.density) continue; //TODO use tilemanager here
+		requests.emplace_back(Location{ 0, 0, otherLocCopy.tp });
+		otherLocCopy.tp = curr_tp;
+		requests.emplace_back(otherLocCopy);
+		break;
+
+	}
+	return requests;
+}
+
+BasicTile::BasicTile(TILEDATATYPE id) : id{id}
 {
 	get_id() = id;
 }
 
-BoringTile::~BoringTile()
+BasicTile::~BasicTile()
 {
 }
 
@@ -290,5 +428,52 @@ TileManager::TileManager() : first_free{ 0 }, tiles{ 2 ^ (8 * sizeof(TILEDATATYP
 
 shared_ptr<AbstractTile> TileManager::at(TILEDATATYPE key)
 {
-	return tiles.at(key) ? tiles.at(key) : tiles.at(0);
+#ifdef VEC_UNSAFE
+	shared_ptr<AbstractTile> tile = tiles[key];
+	return tile ? tile : tiles[0];
+#else
+	shared_ptr<AbstractTile> tile = tiles.at(key);
+	return tile ? tile : tiles.at(0);
+#endif
+}
+
+bool TileManager::add(shared_ptr<AbstractTile> tile)
+{
+	tiles.at(first_free++) = tile;
+	return true;
+}
+
+bool TileManager::add(list<shared_ptr<AbstractTile>>& tile)
+{
+	for (auto t : tile) {
+		tiles.at(first_free++) = t;
+	}
+	return true;
+}
+
+#ifdef JSON_PARSE_H
+bool TileManager::add(const string& filename)
+{
+	return false;
+}
+#endif
+
+TILEDATATYPE TileManager::find(const string& name) const
+{
+	for (size_t i = 0; i < tiles.size(); i++) {
+		if (tiles.at(i)->get_name() == name) {
+			return (TILEDATATYPE)i;
+		}
+	}
+	return (TILEDATATYPE)0;
+}
+
+TILEDATATYPE TileManager::find(char chr) const
+{
+	for (size_t i = 0; i < tiles.size(); i++) {
+		if (tiles.at(i)->get_displayChar() == chr) {
+			return (TILEDATATYPE)i;
+		}
+	}
+	return (TILEDATATYPE)0;
 }

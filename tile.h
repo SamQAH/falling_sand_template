@@ -19,11 +19,16 @@ enum TileType : TILEDATATYPE
 
 typedef vector<vector<TileType>> MAPTYPE;
 
-enum DirectionVector {
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT,
+// bitpacked pair of 2 'shortshort' used as relatice coords
+enum DirectionVector : uint8_t {
+	UP = (1 << 4) + 0,
+	DOWN = (1 << 4) + 2,
+	LEFT = (0 << 4) + 1,
+	RIGHT = (2 << 4) + 1,
+	Q1 = (2 << 4) + 0,
+	Q2 = (0 << 4) + 0,
+	Q3 = (0 << 4) + 2,
+	Q4 = (2 << 4) + 2,
 	ZERO
 };
 struct MoveLogicProbabilityLayer {
@@ -61,7 +66,7 @@ enum ChemReactionType {
 struct ChemReaction {
 	ChemReactionType reactionType;
 	TileType reagent_one, reagent_two, resultant_one, resultant_two;
-	float reactivity;
+	float probability;
 };
 struct TileChemicalProperties {
 	float reactivity;
@@ -106,6 +111,7 @@ private:
 	string name;
 	size_t updateFrequency;
 	map<TileType, vector<ChemReaction>> chemicalReactions;
+	bool isChemicallyStable;
 	bool isPositionStable;
 	int density;
 	list<MoveLogicProbabilityLayer> moveLogicLayers;
@@ -114,22 +120,32 @@ private:
 	virtual list<Location> extraIterLogic(function<TileType(int, int)> get);
 public:
 	AbstractTile();
+#ifdef JSON_PARSE_H
+	AbstractTile(const string& data);
+#endif
+	virtual ~AbstractTile() = 0;
 	TILEDATATYPE& get_id();
 	char& get_displayChar();
 	string& get_name();
 	size_t& get_updateFrequency();
 	map<TileType, vector<ChemReaction>>& get_chemicalReactions();
 	bool& get_isPositionStable();
+	bool& get_isChemicallyStable();
 	int& get_density();
+	list<MoveLogicProbabilityLayer>& get_moveLogicLayers();
 	virtual list<Location> iterLogic(function<TileType(int, int)> get);
-	virtual ~AbstractTile() = 0;
 };
 
 // no chemical reactions, positionally stable
-class BoringTile : public AbstractTile {
+class BasicTile : public AbstractTile {
+private:
+	virtual list<Location> chemIterLogic(function<TileType(int, int)> get);
+	virtual list<Location> moveIterLogic(function<TileType(int, int)> get);
+
 public:
-	BoringTile(TILEDATATYPE id);
-	~BoringTile();
+	BasicTile(TILEDATATYPE id);
+	~BasicTile();
+	virtual list<Location> iterLogic(function<TileType(int, int)> get);
 };
 
 // TileManager, manages tile information, must use this class to access
@@ -142,6 +158,13 @@ public:
 	TileManager();
 	~TileManager() = default;
 	shared_ptr<AbstractTile> at(TILEDATATYPE key);
+	bool add(shared_ptr<AbstractTile> tile);
+	bool add(list<shared_ptr<AbstractTile>>& tile);
+#ifdef JSON_PARSE_H
+	bool add(const string& filename);
+#endif
+	TILEDATATYPE find(const string& name) const;
+	TILEDATATYPE find(char chr) const;
 };
 
 
