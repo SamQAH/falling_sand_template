@@ -1,0 +1,124 @@
+{
+    "WATER":{
+        "updateFrequency": 2,
+        "reactivity": 0.3,
+        "reactions": [],
+        "physics": {
+            "stable": false,
+            "density": 5,
+            "layers": [
+                {"choices": ["DOWN"], "probs":[1] },
+                {"choices": ["LEFT", "RIGHT"], "probs":[0.5, 1]   }
+            ]
+        }
+    },
+    "SAND":{
+        "updateFrequency": 1,
+        "reactivity": 0.1,
+        "reactions": [],
+        "physics": {
+            "stable": false,
+            "density": 7,
+            "layers": [
+                {"choices": ["DOWN"], "probs":[1] },
+                {"choices": ["LEFT", "RIGHT"], "probs":[0.5, 1]   }
+            ]
+        }
+    },
+    "EMPTY":{
+        "updateFrequency": -1,
+        "reactivity": 0,
+        "reactions": [],
+        "physics": {
+            "stable": true,
+            "density": 0,
+            "layers": []
+        }
+    },
+    "BOOB":{
+        "updateFrequency": -1,
+        "reactivity": 0,
+        "reactions": [],
+        "physics": {
+            "stable": true,
+            "density": 1000,
+            "layers": []
+        }
+    },
+    "GROUND":{
+        "updateFrequency": -1,
+        "reactivity": 0.05,
+        "reactions": [],
+        "physics": {
+            "stable": true,
+            "density": 10,
+            "layers": []
+        }
+    },
+    "STEAM":{
+        "updateFrequency": 2,
+        "reactivity": 0.01,
+        "reactions": [
+            {
+                "with": "BOOB",
+                "details": [
+                    {
+                        "reactionType": ["ONE_TO_ONE"], 
+                        "tiles": ["STEAM","BOOB","WATER","BOOB"]
+                    }
+                ]
+            }
+        ],
+        "physics": {
+            "stable": false,
+            "density": 5,
+            "layers": [
+                {"choices": ["UP", "DOWN"], "probs":[0.2, 0.4] },
+                {"choices": ["LEFT", "RIGHT"], "probs":[0.6, 0.8]   }
+            ]
+        }
+    },
+    "LAVA":{
+        "updateFrequency": 4,
+        "reactivity": 0.9,
+        "reactions": [
+            {
+                "with": "WATER",
+                "details": [
+                    {
+                        "reactionType": ["TWO_TO_TWO"], 
+                        "tiles": ["LAVA","WATER","GROUND","STEAM"]
+                    }
+                ]
+            },
+            {
+                "with": "GROUND",
+                "details": [
+                    {
+                        "reactionType": ["TWO_TO_TWO"], 
+                        "tiles": ["LAVA","GROUND","LAVA","LAVA"]
+                    }
+                ]
+            }
+        ],
+        "physics": {
+            "stable": false,
+            "density": 9,
+            "layers": [
+                {"choices": ["DOWN"], "probs":[1] },
+                {"choices": ["LEFT", "RIGHT"], "probs":[0.5, 1]},
+                {"choices": ["LEFT", "RIGHT"], "probs": [0.5, 1]}
+            ]
+        }
+    },
+    "STICKY_POWDER": {
+        "updateFrequency": 4,
+        "reactivity": 1.0,
+        "reactions": [],
+        "physics": {
+            "stable": false,
+            "density": 7,
+            "layers": []
+        }
+    }
+}

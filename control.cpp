@@ -2,6 +2,7 @@
 #include"logic.h"
 #include"viewer.h"
 #include"config.h"
+#include "parser.h"
 
 int main() {
 	Logic logic(20, 15);
@@ -13,6 +14,7 @@ int main() {
 
 	bool running = true;
 	TileType tp = TileType::EMPTY;
+	load_config_from_json("particles.json");
 	while (running) {
 		//system("cls");
 		viewer.print();
