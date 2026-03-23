@@ -145,26 +145,24 @@ private:
 public:
 	BasicTile(TILEDATATYPE id);
 	~BasicTile();
-	virtual list<Location> iterLogic(function<TileType(int, int)> get);
+	//virtual list<Location> iterLogic(function<TileType(int, int)> get);
 };
 
 // TileManager, manages tile information, must use this class to access
 class TileManager {
 private:
-	size_t first_free;
-	vector<shared_ptr<AbstractTile>> tiles;
+	static size_t first_free;
+	static vector<shared_ptr<AbstractTile>> tiles;
 
 public:
-	TileManager();
-	~TileManager() = default;
-	shared_ptr<AbstractTile> at(TILEDATATYPE key);
-	bool add(shared_ptr<AbstractTile> tile);
-	bool add(list<shared_ptr<AbstractTile>>& tile);
+	static shared_ptr<AbstractTile> at(TILEDATATYPE key);
+	static bool add(shared_ptr<AbstractTile> tile);
+	static bool add(list<shared_ptr<AbstractTile>>& tile);
 #ifdef JSON_PARSE_H
-	bool add(const string& filename);
+	static bool add(const string& filename);
 #endif
-	TILEDATATYPE find(const string& name) const;
-	TILEDATATYPE find(char chr) const;
+	static TILEDATATYPE find(const string& name);
+	static TILEDATATYPE find(char chr);
 };
 
 

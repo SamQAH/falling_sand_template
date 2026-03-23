@@ -302,9 +302,10 @@ list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
 	map<TileType, vector<ChemReaction>>& chemRec = get_chemicalReactions();
+	if (chemRec.size() == 0) return requests;
 	vector<Location> adjacencies = { Location{ 0, -1, get(0, -1) }, Location{ 0, 1, get(0, 1) }, Location{ -1, 0, get(-1, 0) }, Location{ 1, 0, get(1, 0) } };
 	for (auto adjIter = adjacencies.begin(); adjIter != adjacencies.end(); ++adjIter) {
-		auto iter = chemRec.find(loc.tp);
+		auto iter = chemRec.find((TileType)get_id());
 		if (iter == chemRec.end()) continue;
 		float random = (float)(rand() % 128) / 128;
 		vector<ChemReaction>& crt = iter->second;
@@ -389,29 +390,29 @@ list<Location> BasicTile::moveIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
 	list<MoveLogicProbabilityLayer>& mvLayers = get_moveLogicLayers();
-	for (auto moveIter = mvLayers.begin(); moveIter != mvLayers.end(); ++moveIter) {
-		MoveLogicProbabilityLayer& tmp = *moveIter;
+	for (auto& tmp : mvLayers) {
 		float random = (float)(rand() % 128) / 128;
 		size_t choice_index = 0;
+		float prob_sum = 0;
 		for (; choice_index < tmp.probs.size(); choice_index++) {
-			if (tmp.probs.at(choice_index) > random) break;
+			prob_sum += tmp.probs.at(choice_index);
+			if (prob_sum > random) break;
 		}
 		if (choice_index == tmp.probs.size()) break;
 		DirectionVector vec = tmp.choices.at(choice_index);
-		int vec_col = ((uint8_t)vec >> 4) - 1;
-		int vec_row = ((uint8_t)vec % 16) - 1;
-		Location otherLocCopy = {vec_col, vec_row, get(vec_col, vec_row)};
-		if (tile_properties.at(otherLocCopy.tp).moveProperties.density > mp.density) continue; //TODO use tilemanager here
-		requests.emplace_back(Location{ 0, 0, otherLocCopy.tp });
-		otherLocCopy.tp = curr_tp;
-		requests.emplace_back(otherLocCopy);
+		int vec_col = (int)(((uint8_t)vec) >> 4) - 1;
+		int vec_row = (int)(((uint8_t)vec) % 16) - 1;
+		TileType other_tile = get(vec_col, vec_row);
+		if (TileManager::at(other_tile)->get_density() > get_density()) continue;
+		requests.emplace_back(Location{ 0, 0, other_tile });
+		requests.emplace_back(Location{ vec_col, vec_row, (TileType)get_id()});
 		break;
 
 	}
 	return requests;
 }
 
-BasicTile::BasicTile(TILEDATATYPE id) : id{id}
+BasicTile::BasicTile(TILEDATATYPE id)
 {
 	get_id() = id;
 }
@@ -420,11 +421,10 @@ BasicTile::~BasicTile()
 {
 }
 
-TileManager::TileManager() : first_free{ 0 }, tiles{ 2 ^ (8 * sizeof(TILEDATATYPE)) }
-{
-	auto temp = make_shared<BoringTile>(0);
-	tiles.at(0) = temp;
-}
+size_t TileManager::first_free = 0;
+vector<shared_ptr<AbstractTile>> TileManager::tiles{ 2 ^ (8 * sizeof(TILEDATATYPE)) };
+
+//TileManager::tiles.at(0) = make_shared<BoringTile>(0);
 
 shared_ptr<AbstractTile> TileManager::at(TILEDATATYPE key)
 {
@@ -458,7 +458,7 @@ bool TileManager::add(const string& filename)
 }
 #endif
 
-TILEDATATYPE TileManager::find(const string& name) const
+TILEDATATYPE TileManager::find(const string& name)
 {
 	for (size_t i = 0; i < tiles.size(); i++) {
 		if (tiles.at(i)->get_name() == name) {
@@ -468,7 +468,7 @@ TILEDATATYPE TileManager::find(const string& name) const
 	return (TILEDATATYPE)0;
 }
 
-TILEDATATYPE TileManager::find(char chr) const
+TILEDATATYPE TileManager::find(char chr)
 {
 	for (size_t i = 0; i < tiles.size(); i++) {
 		if (tiles.at(i)->get_displayChar() == chr) {
