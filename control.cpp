@@ -1,9 +1,25 @@
 #include"tile.h"
 #include"logic.h"
 #include"viewer.h"
+#include"json.h"
 #include"config.h"
+void test() {
+	JsonObject* obj = nullptr;
+	ifstream ifs{ "tile_properties.json" };
+	if (!(ifs.good())) {
+		cerr << "can not open json" << endl;
+	}
+	else {
+		cerr << "opened json" << endl;
+		ifs >> obj;
+		cerr << static_cast<string>(*obj);
+		ifs.close();
+	}
 
+}
 int main() {
+	test();
+	//cout << "Start." << endl;
 	Logic logic(20, 15);
 	Viewer viewer(cout, logic.get_active_map());
 
@@ -14,7 +30,6 @@ int main() {
 	bool running = true;
 	TileType tp = TileType::EMPTY;
 	while (running) {
-		//system("cls");
 		viewer.print();
 		string buffer;
 		int temp_a;
@@ -37,12 +52,12 @@ int main() {
 			iss >> temp_a >> temp_b >> buffer;
 			try {
 				tp = string_tile.at(buffer);
+				viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
+				logic.set_tile_at(temp_a, temp_b, tp);
 			}
-			catch (int e) {
+			catch (const out_of_range& e) {
 				viewer << ("Can not convert:" + buffer + " into TileType.");
 			}
-			viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
-			logic.set_tile_at(temp_a, temp_b, tp);
 			break;
 		case 't':
 			iss >> temp_a;

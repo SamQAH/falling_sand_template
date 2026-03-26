@@ -44,27 +44,33 @@ void Logic::full_step() {
 }
 
 void Logic::step() {
-	*inactive_map = *active_map;
-	for (int row = 0; row < height; row++) {
-		for (int col = 0; col < width; col++) {
-			if (!isCurrentLogicStep(row, col)) continue;
-			int tile_freq = tile_properties.at(active_map->at(row).at(col)).updateFrequency;
-			if (tile_freq < 0 || (step_count / num_step_full) % tile_freq != 0) continue;
-			set_get_tile_relative(col, row);
-			list<Location> request_actions = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
-			for (auto& loc : request_actions) {
-				// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
+	try {
+		*inactive_map = *active_map;
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				if (!isCurrentLogicStep(row, col)) continue;
+				int tile_freq = tile_properties.at(active_map->at(row).at(col)).updateFrequency;
+				if (tile_freq <= 0 || (step_count / num_step_full) % (tile_freq + 1) != 0) continue;
+				set_get_tile_relative(col, row);
+				list<Location> request_actions = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
+				for (auto& loc : request_actions) {
+					// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
 #ifdef VEC_UNSAFE
-				(*inactive_map)[row + loc.row][col + loc.col] = loc.tp;
+					(*inactive_map)[row + loc.row][col + loc.col] = loc.tp;
 #else
-				inactive_map->at(row + loc.row).at(col + loc.col) = loc.tp;
+					inactive_map->at(row + loc.row).at(col + loc.col) = loc.tp;
 #endif
-			}
+				}
 
+			}
 		}
+		step_count++;
+		swap(active_map, inactive_map);
 	}
-	step_count++;
-	swap(active_map, inactive_map);
+	catch (const std::out_of_range& e) {
+		cerr << e.what() << endl;
+		cerr << "At Logic::step" << endl;
+	}
 }
 
 MAPTYPE*& Logic::get_active_map() {
@@ -104,7 +110,9 @@ bool Logic::set_tiles_rect(int width, int height, int wid, int hei, TileType tp)
 		swap(active_map, inactive_map);
 		return true;
 	}
-	catch (int e) {
+	catch (const std::out_of_range& e) {
+		cerr << e.what() << endl;
+		cerr << "At Logic::set tiles rect" << endl;
 		return false;
 	}
 }

@@ -186,7 +186,11 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 			if (tmp.probs.at(choice_index) > random) break;
 		}
 		if (choice_index == tmp.probs.size()) break;
-		Location otherLocCopy = adjacencies.at((int)(tmp.choices.at(choice_index)));
+		DirectionVector vec = tmp.choices.at(choice_index);
+		int vec_col = (int)(((uint8_t)vec) >> 4) - 1;
+		int vec_row = (int)(((uint8_t)vec) % 16) - 1;
+		TileType other_tile = get(vec_col, vec_row);
+		Location otherLocCopy = Location{vec_col, vec_row, other_tile};
 		if (tile_properties.at(otherLocCopy.tp).moveProperties.density > mp.density) continue;
 		requests.emplace_back(Location{ 0, 0, otherLocCopy.tp });
 		otherLocCopy.tp = curr_tp;
@@ -405,7 +409,7 @@ list<Location> BasicTile::moveIterLogic(function<TileType(int, int)> get)
 		TileType other_tile = get(vec_col, vec_row);
 		if (TileManager::at(other_tile)->get_density() > get_density()) continue;
 		requests.emplace_back(Location{ 0, 0, other_tile });
-		requests.emplace_back(Location{ vec_col, vec_row, (TileType)get_id()});
+		requests.emplace_back(Location{ vec_col, vec_row, (TileType)get_id() });
 		break;
 
 	}

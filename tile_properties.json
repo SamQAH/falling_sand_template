@@ -1,0 +1,12 @@
+[
+  {
+    "name": "ground",
+    "char": "=",
+    "update frequency": 0,
+    "chemical reactions": {},
+    "position stable": "true",
+    "chemical stable": "true",
+    "density": 10,
+    "move logic": []
+  }
+]

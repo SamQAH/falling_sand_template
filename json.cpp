@@ -1,45 +1,65 @@
 #include "json.h"
 
 bool getJsonString(istream& in, JsonString& str) {
+	cerr << "get string: ";
 	string buffer;
 	getline(in, buffer, '\"');
 	getline(in, buffer, '\"');
 	if (in) {
 		str.value = buffer;
+		cerr << str.value << endl;
 		return true;
 	}
 	return false;
 }
 bool getJsonDouble(istream& in, JsonDouble& db) {
+	cerr << "get double: ";
 	double temp;
 	in >> temp;
 	if (in) {
 		db.value = temp;
+		cerr << db.value << endl;
 		return true;
 	}
 	return false;
 }
 bool getJsonTree(istream& in, JsonTree& tree) {
-	char next = in.get();
+	cerr << "get tree: ";
+	char next;
+	in >> next;
 	while (next != '}') {
-		char colon = ' ';
+		cerr << "get tree element ";
+		char colon;
 		JsonObject* key = nullptr;
 		JsonObject* val = nullptr;
-		in >> key >> ws >> colon >> ws >> val >> ws >> next;
-		if (in && colon == ':') {
-			tree.value.emplace(key->to_string(), val);
+		in >> ws >> key >> ws >> colon >> ws >> val >> ws >> next;// TODO debug
+		if (!in) {
+			cerr << "in failed" << flush;
+		}
+		if (key == nullptr) {
+			cerr << "key nullptr " << flush;
+		}
+		if (val == nullptr) {
+			cerr << "val nullptr " << flush;
+
+		}
+		if (in && colon == ':' && (next == ',' || next == '}')) {
+			cerr << "added element to tree";
+			tree.value.emplace( static_cast<string>(*key), val);
 		}
 		else {
 			return false;
 		}
 	}
+	cerr << "get tree done" << endl;
 	return true;
 }
 bool getJsonList(istream& in, JsonList& lst) {
+	cerr << "get list: ";
 	char next = in.get();
 	while (in && next != ']') {
 		JsonObject* temp = nullptr;
-		in >> temp >> ws >> next;
+		in >> ws >> temp >> ws >> next;
 		if (in) {
 			lst.value.push_back(unique_ptr<JsonObject>(temp));
 		}
@@ -47,6 +67,7 @@ bool getJsonList(istream& in, JsonList& lst) {
 			return false;
 		}
 	}
+	cerr << "get list done" << endl;
 	return true;
 }
 
@@ -67,30 +88,33 @@ istream& operator>>(istream& in, JsonObject* acc) {
 	}
 	else if (next == '\"') {
 		temp = new JsonString();
-		good = getJsonString(in, (JsonString&)*temp);
+		good = getJsonString(in, *((JsonString*)temp));
 	}
 	else {
 		temp = new JsonDouble();
 		good = getJsonDouble(in, (JsonDouble&)*temp);
 	}
-	if (!good || temp == nullptr) {
-		return in;
-	}
-	if (!good || !in) {
+
+	if (!good || !in || !temp) {
 		in.setstate(std::ios_base::badbit);
+		cerr << "<< bad: " << flush;
 		return in;
 	}
-	swap(acc, temp);
+	JsonObject* a = acc;
+	acc = temp;
+	temp = a;
 	delete temp;
+	string read_val = *acc;
+	cerr << "<< read: " << read_val << flush;
 	return in;
 }
 
-string JsonTree::to_string() const
+JsonTree::operator string() const
 {
 	ostringstream oss;
 	oss << '{';
 	for (auto iter = value.begin(); iter != value.end(); ++iter) {
-		oss << iter->first << ':' << iter->second->to_string() << ',' << endl;
+		oss << iter->first << ':' << static_cast<string>(*(iter->second)) << ',' << endl;
 	}
 	oss << '}' << endl;
 	return oss.str();
@@ -101,12 +125,12 @@ JsonType JsonTree::get_data_type() const
 	return JsonType::TREE;
 }
 
-string JsonList::to_string() const
+JsonList::operator string() const
 {
 	ostringstream oss;
 	oss << '[';
 	for (auto& iter : value) {
-		oss << iter->to_string() << ',';
+		oss << static_cast<string>(*iter) << ',';
 	}
 	oss << ']' << endl;
 	return oss.str();
@@ -117,7 +141,7 @@ JsonType JsonList::get_data_type() const
 	return JsonType::LIST;
 }
 
-string JsonString::to_string() const
+JsonString::operator string() const
 {
 	return value;
 }
@@ -127,7 +151,7 @@ JsonType JsonString::get_data_type() const
 	return JsonType::STRING;
 }
 
-string JsonDouble::to_string() const
+JsonDouble::operator string() const
 {
 	return ::std::to_string(value);
 }

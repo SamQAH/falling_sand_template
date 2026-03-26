@@ -1,6 +1,8 @@
 #include<chrono>
 #include<cmath>
 #include<cstdlib>
+#include<exception>
+#include<fstream>
 #include<functional>
 #include<iostream>
 #include<list>

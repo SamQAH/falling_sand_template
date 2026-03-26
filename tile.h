@@ -10,11 +10,11 @@ enum TileType : TILEDATATYPE
 	BOOB, // use as sentinal value
 	EMPTY,
 	GROUND,
-	SAND,
-	STICKY_POWDER,
 	WATER,
+	STEAM,
 	LAVA,
-	STEAM
+	SAND,
+	STICKY_POWDER
 };
 
 typedef vector<vector<TileType>> MAPTYPE;
@@ -121,7 +121,7 @@ private:
 public:
 	AbstractTile();
 #ifdef JSON_PARSE_H
-	AbstractTile(const string& data);
+	AbstractTile(JsonTree& data);
 #endif
 	virtual ~AbstractTile() = 0;
 	TILEDATATYPE& get_id();

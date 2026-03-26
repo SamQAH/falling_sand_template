@@ -35,13 +35,13 @@ void Viewer::print() {
 	MAPTYPE& map = *map_data;
 	int display_height = map.size();
 	int display_width = map.at(0).size();
-	int h = 0;
 	out << "\x1B[" << display_height + pre_num_logged + 3 << "A\x1B[0J";
 	out << ' ';
 	for (int i = 0; i < display_width; i++) {
 		out << ' ' << i % 10;
 	}
 	out << '\n';
+	int h = 0;
 	for (auto& rows : map) {
 		out << h++ % 10;
 		for (auto& tile : rows) {

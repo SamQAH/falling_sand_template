@@ -30,7 +30,7 @@ clean:
 
 test:
 	make
-	out.exe 2> error.txt
+	out.exe
 
 .PHONY: clean test fast
 
