@@ -8,7 +8,8 @@ enum JsonType {
 	DOUBLe,
 	TREE,
 	LIST,
-	JSON
+	JSON,
+	NUll
 };
 
 class JsonObject {
@@ -16,6 +17,13 @@ public:
 	virtual operator string () const = 0;
 	virtual JsonType get_data_type() const = 0;
 	virtual ~JsonObject() = default;
+};
+class JsonNull : public JsonObject {
+public:
+	void* value;
+	operator string () const;
+	virtual JsonType get_data_type() const;
+	virtual ~JsonNull() = default;
 };
 class JsonTree : public JsonObject {
 public:
@@ -46,6 +54,6 @@ public:
 	virtual ~JsonDouble() = default;
 };
 
-istream& operator>>(istream& in, JsonObject* acc);
+istream& operator>>(istream& in, JsonObject*& acc);
 
 #endif

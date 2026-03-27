@@ -11,7 +11,7 @@ void test() {
 	}
 	else {
 		cerr << "opened json" << endl;
-		ifs >> obj;
+		ifs >> (JsonObject*&)obj;
 		cerr << static_cast<string>(*obj);
 		ifs.close();
 	}
