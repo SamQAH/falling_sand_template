@@ -2,6 +2,7 @@
 #define TILE_H
 
 #include"config.h"
+#include"json.h"
 
 typedef char TILEDATATYPE;
 

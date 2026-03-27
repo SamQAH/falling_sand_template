@@ -155,3 +155,13 @@ JsonType JsonNull::get_data_type() const
 {
 	return JsonType::NUll;
 }
+
+JsonObject::operator string() const
+{
+	return "";
+}
+
+string JsonObject::to_string() const
+{
+	return static_cast<string>(*this);
+}

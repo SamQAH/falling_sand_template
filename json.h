@@ -1,5 +1,6 @@
 #ifndef JSON_H
 #define JSON_H
+#define JSON_PARSE_H
 
 #include "config.h"
 
@@ -14,7 +15,8 @@ enum JsonType {
 
 class JsonObject {
 public:
-	virtual operator string () const = 0;
+	virtual operator string () const;
+	virtual string to_string() const;
 	virtual JsonType get_data_type() const = 0;
 	virtual ~JsonObject() = default;
 };

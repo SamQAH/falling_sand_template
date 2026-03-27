@@ -226,9 +226,9 @@ AbstractTile::AbstractTile() : id{ 0 }, displayChar{ '?' }, name{ "unknown" }, u
 }
 
 #ifdef JSON_PARSE_H
-AbstractTile::AbstractTile(const string& data)
+AbstractTile::AbstractTile(JsonTree& data)
 {
-	JsonObject m{ (istringstream)data };
+	
 }
 #endif
 
@@ -374,17 +374,17 @@ list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
 			}
 			if (!choosedReact) break;
 			// self reaction will now occur
-			switch (choosenReaction.reactionType)
-			{
-			case ChemReactionType::ONE_TO_ONE:
-				requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
-				break;
-			case ChemReactionType::SELF_CATALYTIC:
-				requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
-				break;
-			default:
-				break;
-			}
+switch (choosenReaction.reactionType)
+{
+case ChemReactionType::ONE_TO_ONE:
+	requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+	break;
+case ChemReactionType::SELF_CATALYTIC:
+	requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+	break;
+default:
+	break;
+}
 		}
 	}
 	return requests;
@@ -443,6 +443,10 @@ shared_ptr<AbstractTile> TileManager::at(TILEDATATYPE key)
 
 bool TileManager::add(shared_ptr<AbstractTile> tile)
 {
+	if (!tile) {
+		return false;
+	}
+	tile->get_id() = first_free;
 	tiles.at(first_free++) = tile;
 	return true;
 }
@@ -458,7 +462,45 @@ bool TileManager::add(list<shared_ptr<AbstractTile>>& tile)
 #ifdef JSON_PARSE_H
 bool TileManager::add(const string& filename)
 {
-	return false;
+	ifstream ifs{ filename };
+	if (!(ifs.good())) {
+		cerr << "can't read from: " << filename << endl;
+		return false;
+	}
+	JsonObject* tile_properties = nullptr;
+	ifs >> tile_properties;
+	if (!tile_properties) {
+		cerr << "read error from: " << filename << endl;
+		return false;
+	}
+	unique_ptr<JsonObject> smt_decon = unique_ptr<JsonObject>( tile_properties );
+	if (tile_properties->get_data_type() != JsonType::LIST) {
+		cerr << "json format incorrect, expected list: " << filename << endl;
+		return false;
+	}
+	for (auto& tile : ((JsonList*)tile_properties)->value){
+		try {
+			if (tile->get_data_type() != JsonType::TREE) {
+				cerr << "json format incorrect, expected map/dictionary: " << filename << endl;
+				continue;
+			}
+			auto& tile_p = ((JsonTree*)tile.get())->value;
+			shared_ptr<AbstractTile> temp_tile = make_shared<BasicTile>(0);
+			temp_tile->get_displayChar() = tile_p.at("char")->to_string().at(0);
+			temp_tile->get_name() = tile_p.at("name")->to_string();
+			temp_tile->get_updateFrequency() = (size_t)(((JsonDouble*)(tile_p.at("update frequency").get()))->value);
+			//temp_tile->get_chemicalReactions() = json_to_chemreaction((JsonTree*)tile_p.at("chemical reactions"));
+			temp_tile->get_isPositionStable() = tile_p.at("position stable")->to_string().at(0) == 't';
+			temp_tile->get_isChemicallyStable() = tile_p.at("chemical stable")->to_string().at(0) == 't';
+			temp_tile->get_density() = (int)(((JsonDouble*)(tile_p.at("density").get()))->value);
+			//temp_tile->get_moveLogicLayers() = json_to_movelogic((JsonTree*)tile_p.at("move logic"));
+
+		}
+		catch (const exception& e) {
+			cerr << "tile property json format error, " << e.what() << endl;
+		}
+	}
+	return true;
 }
 #endif
 
