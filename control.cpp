@@ -12,7 +12,7 @@ void test() {
 	else {
 		cerr << "opened json" << endl;
 		ifs >> (JsonObject*&)obj;
-		cerr << static_cast<string>(*obj);
+		cerr << obj->to_string();
 		ifs.close();
 	}
 

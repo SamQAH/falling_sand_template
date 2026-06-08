@@ -14,10 +14,13 @@ enum JsonType {
 };
 
 class JsonObject {
+protected:
+	const string Indentation_String = "  ";
 public:
 	virtual operator string () const;
 	virtual string to_string() const;
-	virtual JsonType get_data_type() const = 0;
+	virtual string to_string_helper(int num) const;
+	virtual JsonType get_data_type() const;
 	virtual ~JsonObject() = default;
 };
 class JsonNull : public JsonObject {
@@ -28,6 +31,8 @@ public:
 	virtual ~JsonNull() = default;
 };
 class JsonTree : public JsonObject {
+protected:
+	virtual string to_string_helper(int num) const;
 public:
 	map<string, unique_ptr<JsonObject>> value;
 	operator string () const;
@@ -35,6 +40,8 @@ public:
 	virtual ~JsonTree() = default;
 };
 class JsonList : public JsonObject {
+protected:
+	virtual string to_string_helper(int num) const;
 public:
 	list<unique_ptr<JsonObject>> value;
 	operator string () const;

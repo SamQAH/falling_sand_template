@@ -26,7 +26,10 @@ bool getJsonTree(istream& in, JsonTree& tree) {
 	char next;
 	in >> next >> ws;
 	next = in.peek();
-	while (next != '}') {
+	if (next == '}') {
+		in >> next;
+	}
+	while (in && next != '}') {
 		char colon;
 		JsonObject* key = nullptr;
 		JsonObject* val = nullptr;
@@ -45,6 +48,9 @@ bool getJsonList(istream& in, JsonList& lst) {
 	char next;
 	in >> next >> ws;
 	next = in.peek();
+	if (next == ']') {
+		in >> next;
+	}
 	while (in && next != ']') {
 		JsonObject* temp = nullptr;
 		in >> ws >> temp >> ws >> next;
@@ -94,6 +100,21 @@ istream& operator>>(istream& in, JsonObject*& acc) {
 	return in;
 }
 
+string JsonTree::to_string_helper(int num) const
+{
+	string indent = "";
+	for (int i = 0; i < num; i++) {
+		indent += JsonObject::Indentation_String;
+	}
+	ostringstream oss;
+	oss << "{\n";
+	for (auto iter = value.begin(); iter != value.end(); ++iter) {
+		oss << indent << JsonObject::Indentation_String << iter->first << ':' << iter->second->to_string_helper(num + 1) << ",\n";
+	}
+	oss << indent << "}";
+	return oss.str();
+}
+
 JsonTree::operator string() const
 {
 	ostringstream oss;
@@ -108,6 +129,21 @@ JsonTree::operator string() const
 JsonType JsonTree::get_data_type() const
 {
 	return JsonType::TREE;
+}
+
+string JsonList::to_string_helper(int num) const
+{
+	string indent = "";
+	for (int i = 0; i < num; i++) {
+		indent += JsonObject::Indentation_String;
+	}
+	ostringstream oss;
+	oss << "[\n";
+	for (auto& iter : value) {
+		oss << indent << JsonObject::Indentation_String << iter->to_string_helper(num + 1) << ",\n";
+	}
+	oss << indent << "]";
+	return oss.str();
 }
 
 JsonList::operator string() const
@@ -163,5 +199,15 @@ JsonObject::operator string() const
 
 string JsonObject::to_string() const
 {
+	return this->to_string_helper(0);
+}
+
+string JsonObject::to_string_helper(int num) const
+{
 	return static_cast<string>(*this);
+}
+
+JsonType JsonObject::get_data_type() const
+{
+	return JsonType::JSON;
 }
