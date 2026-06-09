@@ -300,6 +300,20 @@ list<Location> AbstractTile::iterLogic(function<TileType(int, int)> get)
 	return requests;
 }
 
+string AbstractTile::to_string() const
+{
+	ostringstream oss;
+	oss << "Tile name:" << name << endl;
+	oss << "display char:" << displayChar << endl;
+	oss << "update frequency:" << updateFrequency << endl;
+	oss << "chemicalReactions:" << chemicalReactions.size() << endl;
+	oss << "chemically stable:" << isChemicallyStable << endl;
+	oss << "positionally stable:" << isPositionStable << endl;
+	oss << "density:" << density << endl;
+	oss << "move logic:" << moveLogicLayers.size() << endl;
+	return oss.str();
+}
+
 AbstractTile::~AbstractTile() {}
 
 list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
@@ -475,10 +489,13 @@ bool TileManager::add(const string& filename)
 	}
 	unique_ptr<JsonObject> smt_decon = unique_ptr<JsonObject>( tile_properties );
 	if (tile_properties->get_data_type() != JsonType::LIST) {
-		cerr << "json format incorrect, expected list: " << filename << endl;
+		cerr << "json format incorrect," << (size_t)(tile_properties->get_data_type()) << " expected list: " << filename << endl;
 		return false;
 	}
 	for (auto& tile : ((JsonList*)tile_properties)->value){
+#ifdef VERBOSE
+		cerr << "New substance added" << tile->to_string() << endl;
+#endif
 		try {
 			if (tile->get_data_type() != JsonType::TREE) {
 				cerr << "json format incorrect, expected map/dictionary: " << filename << endl;
@@ -494,7 +511,7 @@ bool TileManager::add(const string& filename)
 			temp_tile->get_isChemicallyStable() = tile_p.at("chemical stable")->to_string().at(0) == 't';
 			temp_tile->get_density() = (int)(((JsonDouble*)(tile_p.at("density").get()))->value);
 			//temp_tile->get_moveLogicLayers() = json_to_movelogic((JsonTree*)tile_p.at("move logic"));
-
+			add(temp_tile);
 		}
 		catch (const exception& e) {
 			cerr << "tile property json format error, " << e.what() << endl;
@@ -522,4 +539,13 @@ TILEDATATYPE TileManager::find(char chr)
 		}
 	}
 	return (TILEDATATYPE)0;
+}
+
+string TileManager::to_string()
+{
+	ostringstream oss;
+	for (size_t i = 0; i < first_free; i++) {
+		oss << tiles.at(0)->to_string();
+	}
+	return oss.str();
 }

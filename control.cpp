@@ -4,16 +4,18 @@
 #include"json.h"
 #include"config.h"
 void test() {
-	JsonObject* obj = nullptr;
+	//JsonObject* obj = nullptr;
 	ifstream ifs{ "tile_properties.json" };
 	if (!(ifs.good())) {
 		cerr << "can not open json" << endl;
 	}
 	else {
-		cerr << "opened json" << endl;
-		ifs >> (JsonObject*&)obj;
-		cerr << obj->to_string();
+		//cerr << "opened json" << endl;
+		//ifs >> (JsonObject*&)obj;
+		//cerr << obj->to_string();
 		ifs.close();
+		TileManager::add("tile_properties.json");
+		cout << TileManager::to_string() << endl;
 	}
 
 }

@@ -106,7 +106,7 @@ struct Location {
 // not used
 class AbstractTile {
 	friend class TileManager;
-private:
+protected:
 	TILEDATATYPE id;
 	char displayChar;
 	string name;
@@ -135,6 +135,7 @@ public:
 	int& get_density();
 	list<MoveLogicProbabilityLayer>& get_moveLogicLayers();
 	virtual list<Location> iterLogic(function<TileType(int, int)> get);
+	virtual string to_string() const;
 };
 
 // no chemical reactions, positionally stable
@@ -147,6 +148,7 @@ public:
 	BasicTile(TILEDATATYPE id);
 	~BasicTile();
 	//virtual list<Location> iterLogic(function<TileType(int, int)> get);
+	//virtual string to_string() const;
 };
 
 // TileManager, manages tile information, must use this class to access
@@ -164,6 +166,7 @@ public:
 #endif
 	static TILEDATATYPE find(const string& name);
 	static TILEDATATYPE find(char chr);
+	static string to_string();
 };
 
 
