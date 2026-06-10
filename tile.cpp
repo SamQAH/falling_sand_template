@@ -492,9 +492,12 @@ bool TileManager::add(const string& filename)
 		cerr << "json format incorrect," << (size_t)(tile_properties->get_data_type()) << " expected list: " << filename << endl;
 		return false;
 	}
+#ifdef VERBOSE
+	cerr << tile_properties->to_string() << endl;
+#endif
 	for (auto& tile : ((JsonList*)tile_properties)->value){
 #ifdef VERBOSE
-		cerr << "New substance added" << tile->to_string() << endl;
+		cerr << "New substance added" <<  tile->to_string() << endl;
 #endif
 		try {
 			if (tile->get_data_type() != JsonType::TREE) {
@@ -545,7 +548,7 @@ string TileManager::to_string()
 {
 	ostringstream oss;
 	for (size_t i = 0; i < first_free; i++) {
-		oss << tiles.at(0)->to_string();
+		oss << tiles.at(i)->to_string() << endl;
 	}
 	return oss.str();
 }

@@ -6,7 +6,57 @@
     "chemical reactions": {},
     "position stable": "true",
     "chemical stable": "true",
-    "density": 10,
+    "density": 100,
     "move logic": []
+  },
+  {
+    "name": "empty",
+    "char": " ",
+    "update frequency": 0,
+    "chemical reactions": {},
+    "position stable": "true",
+    "chemical stable": "true",
+    "density": 0,
+    "move logic": []
+  },
+  {
+    "name": "water",
+    "char": ".",
+    "update frequency": 2,
+    "chemical reactions": {},
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": 50,
+    "move logic": ["fluid"]
+  },
+  {
+    "name": "steam",
+    "char": "'",
+    "update frequency": 2,
+    "chemical reactions": {},
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": -5,
+    "move logic": ["gas"]
+  },
+  {
+    "name": "lava",
+    "char": "L",
+    "update frequency": 10,
+    "chemical reactions": {},
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": 90,
+    "move logic": ["fluid"]
+  },
+  {
+    "name": "sand",
+    "char": "s",
+    "update frequency": 20,
+    "chemical reactions": {},
+    "position stable": "false",
+    "chemical stable": "true",
+    "density": 10,
+    "move logic": ["powder"]
   }
 ]

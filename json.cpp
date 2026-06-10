@@ -1,6 +1,9 @@
 #include "json.h"
 
 bool getJsonString(istream& in, JsonString& str) {
+	if (!in) {
+		cerr << "Received failed istream at getJsonString." << endl;
+	}
 	str.value = "";
 	string buffer;
 	getline(in, buffer, '\"');
@@ -9,9 +12,13 @@ bool getJsonString(istream& in, JsonString& str) {
 		str.value = buffer;
 		return true;
 	}
+	cerr << "Unexpected String read fail." << endl;
 	return false;
 }
 bool getJsonDouble(istream& in, JsonDouble& db) {
+	if (!in) {
+		cerr << "Received failed istream at getJsonDouble." << endl;
+	}
 	db.value = 0;
 	double temp;
 	in >> temp;
@@ -19,9 +26,15 @@ bool getJsonDouble(istream& in, JsonDouble& db) {
 		db.value = temp;
 		return true;
 	}
+	cerr << "Unexpected Double read fail." << endl;
 	return false;
 }
 bool getJsonTree(istream& in, JsonTree& tree) {
+	if (!in) {
+		cerr << "Received failed istream at getJsonTree." << endl;
+	}
+	ostringstream error_str;
+	bool failed = false;
 	tree.value.clear();
 	char next;
 	in >> next >> ws;
@@ -33,17 +46,50 @@ bool getJsonTree(istream& in, JsonTree& tree) {
 		char colon;
 		JsonObject* key = nullptr;
 		JsonObject* val = nullptr;
-		in >> ws >> key >> ws >> colon >> ws >> val >> ws >> next;
+		in >> key >> ws;
+		if (!in && !failed) {
+			error_str << "key read failed.";
+			failed = true;
+		}
+		in >> colon >> ws;
+		if (!in && !failed) {
+			error_str << "colon read failed.";
+			failed = true;
+		}
+		in >> val >> ws;
+		if (!in && !failed) {
+			error_str << "value read failed.";
+			failed = true;
+		}
+		in >> next >> ws;
+		if (!in && !failed) {
+			error_str << "separator character read failed.";
+			failed = true;
+		}
 		if (in && colon == ':' && (next == ',' || next == '}')) {
 			tree.value.emplace( static_cast<string>(*key), val);
 		}
 		else {
+			cerr << "Unexpected Tree read fail.";
+			if (colon != ':') {
+				cerr << "Expected : , \'" << colon << "\' found.";
+			}
+			else if (next != ',' && next != '}') {
+				cerr << "Expected , or } , \'" << colon << "\' found.";
+			}
+			else {
+				cerr << "failed read.";
+			}
+			cerr << error_str.str() << endl;
 			return false;
 		}
 	}
 	return true;
 }
 bool getJsonList(istream& in, JsonList& lst) {
+	if (!in) {
+		cerr << "Received failed istream at getJsonList." << endl;
+	}
 	lst.value.clear();
 	char next;
 	in >> next >> ws;
@@ -53,11 +99,12 @@ bool getJsonList(istream& in, JsonList& lst) {
 	}
 	while (in && next != ']') {
 		JsonObject* temp = nullptr;
-		in >> ws >> temp >> ws >> next;
-		if (in) {
+		in >> temp >> ws >> next >> ws;
+		if (in && (next == ',' || next == ']')) {
 			lst.value.push_back(unique_ptr<JsonObject>(temp));
 		}
 		else {
+			cerr << "Unexpected List read fail." << endl;
 			return false;
 		}
 	}
@@ -83,9 +130,13 @@ istream& operator>>(istream& in, JsonObject*& acc) {
 		temp = new JsonString();
 		good = getJsonString(in, *((JsonString*)temp));
 	}
-	else if (next >= '0' && next <= '9') {
+	else if ((next >= '0' && next <= '9') || next == '-') {
 		temp = new JsonDouble();
 		good = getJsonDouble(in, (JsonDouble&)*temp);
+	}
+	else {
+		cerr << "Unexpected character " << next << endl;
+		good = false;
 	}
 
 	if (!good || !in || !temp) {
