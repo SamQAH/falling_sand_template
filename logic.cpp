@@ -1,4 +1,5 @@
 #include"logic.h"
+#include"tile_manager.h"
 
 Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { (size_t)height }, map_2{ (size_t)height }, active_map{ &map_1 }, inactive_map{ &map_2 } {
 #ifdef VEC_UNSAFE
@@ -32,7 +33,7 @@ TileType Logic::get_tile_at_relative(int width, int height) {
 	return get_tile_at(relative_width + width, relative_height + height);
 }
 
-vector<int> table = {0b0000, 0b1010, 0b1000, 0b0010, 0b0101, 0b1111, 0b1101, 0b0111 , 0b0001, 0b1011, 0b1001, 0b0011 , 0b0100, 0b1110, 0b1100, 0b0110 };
+vector<int> table = {0, 10, 8, 2, 5, 15, 13, 7, 1, 11, 9, 3, 4, 14, 12, 6};
 bool Logic::isCurrentLogicStep(int row, int col) {
 	return table.at(step_count % 16) == ((row % 4) * 4 + (col % 4));
 }
@@ -41,6 +42,44 @@ void Logic::full_step() {
 	for (int i = 0; i < num_step_full; i++) {
 		step();
 	}
+}
+
+// TODO remove, writen for debugging
+string compare_locs_list(list<Location>& a, list<Location>& b) {
+	ostringstream oss;
+	if (a.size() != b.size()) {
+		oss << "Size " << a.size() << "; ";
+		for (auto& loc : a) {
+			oss << loc << ";";
+		}
+		oss << "\nSize " << b.size() << "; ";
+		for (auto& loc : b) {
+			oss << loc << ";";
+		}
+		oss << endl;
+		return oss.str();
+	}
+	for (auto& loc : a) {
+		bool found = false;
+		for (auto& locb : b) {
+			if (loc == locb) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			for (auto& loc : a) {
+				oss << loc << ";";
+			}
+			oss << endl;
+			for (auto& loc : b) {
+				oss << loc << ";";
+			}
+			oss << endl;
+			return oss.str();
+		}
+	}
+	return oss.str();
 }
 
 void Logic::step() {
@@ -53,6 +92,14 @@ void Logic::step() {
 				if (tile_freq <= 0 || (step_count / num_step_full) % (tile_freq + 1) != 0) continue;
 				set_get_tile_relative(col, row);
 				list<Location> request_actions = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
+				// TODO compare request_actions with request_actions_2
+				auto get_f = bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2);
+				list<Location> request_actions_2 = TileManager::at(get_f(0,0))->iterLogic(get_f);
+				string diff = compare_locs_list(request_actions, request_actions_2);
+				if (diff.length() != 0) {
+					cout << "at row " << row << " col " << col << " difference is \n" << diff << endl;
+				}
+				
 				for (auto& loc : request_actions) {
 					// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
 #ifdef VEC_UNSAFE

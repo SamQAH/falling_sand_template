@@ -1,36 +1,30 @@
 
 CC = g++ -std=c++11
-OP = -Wall -MMD -O0
+OP = -Wall -MMD -O0 -pedantic-errors
+FLAGS =  
 OT = -o out.exe
 
-out.exe: control.o logic.o viewer.o tile.o json.o
-	$(CC) $(OP) *.o $(OT)
+SRCS = $(wildcard *.cpp)
+OBJS = $(SRCS:.cpp=.o)
 
-control.o: control.h control.cpp
-	$(CC) $(OP) -c control.cpp
+out.exe: $(OBJS)
+	$(CC) $(OP) $(OBJS) $(OT)
 
-logic.o: logic.h logic.cpp
-	$(CC) $(OP) -c logic.cpp
-
-viewer.o: viewer.h viewer.cpp
-	$(CC) $(OP) -c viewer.cpp
-
-tile.o: tile.h tile.cpp
-	$(CC) $(OP) -c tile.cpp
-
-json.o: json.h json.cpp
-	$(CC) $(OP) -c json.cpp
+%.o: %.cpp
+	$(CC) $(OP) -c $< $(FLAGS) -o $@ 
 
 fast:
-	$(CC) $(OP) -c logic.cpp -DVEC_UNSAFE
-	make
+	make FLAGS="-DVEC_UNSAFE"
+
+debug:
+	make FLAGS="-DVERBOSE -DDEBUG"
 
 clean:
-	rm *.o *.d out.exe
+	rm -f *.o *.d out.exe
 
 test:
 	make
 	out.exe
 
-.PHONY: clean test fast
+.PHONY: clean test fast debug
 

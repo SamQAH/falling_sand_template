@@ -1,5 +1,6 @@
 #include"tile.h"
 #include<random>
+#include"tile_manager.h"
 
 map<TileType, char> tile_display_char = {
 	{TileType::BOOB, '@'},
@@ -83,6 +84,166 @@ map<TileType, TileProperties> tile_properties = {
 	}
 };
 
+map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options = {
+	{"gravity only",
+		{
+			{{DirectionVector::DOWN}, {1}}
+		}
+	},
+	{"powder",
+		{
+			{{DirectionVector::DOWN}, {1}},
+			MoveLogicProbabilityLayer{ {DirectionVector::Q3, DirectionVector::Q4}, {0.45, 0.9} }
+		}
+	},
+	{"liquid",
+		{
+			MoveLogicProbabilityLayer{ {DirectionVector::DOWN}, {1} },
+			MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.45, 0.9} }
+		}
+	},
+	{"gas",
+		{
+			MoveLogicProbabilityLayer{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} }
+		}
+	},
+};
+
+istream& operator>>(istream& in, DirectionVector& direction) {
+	string buffer = "";
+	in >> buffer;
+	if (!in) {
+		return in;
+	}
+	if ("up" == buffer) {
+		direction = DirectionVector::UP;
+	}else if ("down" == buffer) {
+		direction = DirectionVector::DOWN;
+	}else if ("left" == buffer) {
+		direction = DirectionVector::LEFT;
+	}else if( "right" == buffer) {
+		direction = DirectionVector::RIGHT;
+	}else if( "q1" == buffer) {
+		direction = DirectionVector::Q1;
+	}else if( "q2" == buffer) {
+		direction = DirectionVector::Q2;
+	}else if( "q3" == buffer) {
+		direction = DirectionVector::Q3;
+	}else if( "q4" == buffer) {
+		direction = DirectionVector::Q4;
+	}else if( "N" == buffer) {
+		direction = DirectionVector::UP;
+	}else if( "S" == buffer) {
+		direction = DirectionVector::DOWN;
+	}else if( "W" == buffer) {
+		direction = DirectionVector::LEFT;
+	}else if( "E" == buffer) {
+		direction = DirectionVector::RIGHT;
+	}else if( "NE" == buffer) {
+		direction = DirectionVector::Q1;
+	}else if( "NW" == buffer) {
+		direction = DirectionVector::Q2;
+	}else if( "SW" == buffer) {
+		direction = DirectionVector::Q3;
+	}
+	else if ("SE" == buffer) {
+		direction = DirectionVector::Q4;
+	}
+	else {
+		direction = DirectionVector::ZERO;
+	}
+	return in;
+}
+
+ostream& operator<<(ostream& out, const DirectionVector& direction) {
+	switch (direction) {
+	case DirectionVector::UP:
+		out << "up";
+		break;
+	case DirectionVector::DOWN:
+		out << "down";
+		break;
+	case DirectionVector::LEFT:
+		out << "left";
+		break;
+	case DirectionVector::RIGHT:
+		out << "right";
+		break;
+	case DirectionVector::Q1:
+		out << "NE";
+		break;
+	case DirectionVector::Q2:
+		out << "NW";
+		break;
+	case DirectionVector::Q3:
+		out << "SW";
+		break;
+	case DirectionVector::Q4:
+		out << "SE";
+		break;
+	case DirectionVector::ZERO:
+		out << "zero";
+		break;
+	default:
+		out << "[Unknown DirectionVector]";
+		break;
+	}
+	return out;
+}
+
+istream& operator>>(istream& in, MoveLogicProbabilityLayer& move) {
+	//TODO
+	return in;
+}
+
+ostream& operator<<(ostream& out, const MoveLogicProbabilityLayer& move) {
+	auto miter = move.choices.begin();
+	auto piter = move.probs.begin();
+	float prev = 0;
+	while (miter != move.choices.end() && piter != move.probs.end()) {
+		out << *miter << " " << (*piter - prev) << ",";
+		prev = *piter;
+		++miter;
+		++piter;
+	}
+	if (miter != move.choices.end() || piter != move.probs.end()) {
+		out << "lengths of arrays in move logic layer doesn't match." << endl;
+	}
+	return out;
+}
+
+MoveLogicProbabilityLayer operator*(float a, const MoveLogicProbabilityLayer& b) {
+	auto copy = b;
+	for (auto& s : copy.probs) {
+		s *= a;
+	}
+	return copy;
+}
+
+bool operator==(const MoveLogicProbabilityLayer& a, const MoveLogicProbabilityLayer& b) {
+	return false;
+}
+
+istream& operator>>(istream& in, Location& loc) {
+	int row, col, tp;
+	in >> row >> col >> tp;
+	if (!in) {
+		return in;
+	}
+	loc.row = row;
+	loc.col = col;
+	loc.tp = (TileType)tp;
+	return in;
+}
+
+ostream& operator<<(ostream& out, const Location& loc) {
+	out << loc.row << " " << loc.col << " " << (int)loc.tp;
+	return out;
+}
+
+bool operator==(const Location& a, const Location& b) {
+	return a.col == b.col && a.row == b.row && a.tp == b.tp;
+}
 
 char to_display_char(const TileType tp) {
 	try {
@@ -202,19 +363,19 @@ list<Location> TileIter(std::function<TileType(int, int)> get) {
 
 	return requests;
 }
-
+// TODO
 list<Location> AbstractTile::chemIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
 	return requests;
 }
-
+// TODO
 list<Location> AbstractTile::moveIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
 	return requests;
 }
-
+// TODO
 list<Location> AbstractTile::extraIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
@@ -228,8 +389,43 @@ AbstractTile::AbstractTile() : id{ 0 }, displayChar{ '?' }, name{ "unknown" }, u
 #ifdef JSON_PARSE_H
 AbstractTile::AbstractTile(JsonTree& data)
 {
-	
+	displayChar = data.value.at("char")->to_string().at(0);
+	name = data.value.at("name")->to_string();
+	updateFrequency = (size_t)(((JsonDouble*)(data.value.at("update frequency").get()))->value);
+	//chemicalReactions = json_to_chemreaction((JsonTree*)data.value.at("chemical reactions").get());
+	isPositionStable = data.value.at("position stable")->to_string().at(0) == 't';
+	isChemicallyStable = data.value.at("chemical stable")->to_string().at(0) == 't';
+	density = (int)(((JsonDouble*)(data.value.at("density").get()))->value);
+	moveLogicLayers = json_to_movelogic((JsonList*)data.value.at("move logic").get());
 }
+
+map<TileType, vector<ChemReaction>> AbstractTile::json_to_chemreaction(const JsonTree* data)
+{
+	map<TileType, vector<ChemReaction>> reactions;
+
+
+	return reactions;
+}
+
+list<MoveLogicProbabilityLayer> AbstractTile::json_to_movelogic(const JsonList* data)
+{
+	list<MoveLogicProbabilityLayer> moves;
+	if (data->value.size() == 0) {
+		return moves;
+	}
+	else if (data->value.front()->get_data_type() == JsonType::STRING) {
+		try {
+			return default_movelogic_options.at(data->value.front()->to_string());
+		}
+		catch (const exception& e) {
+			cerr << "AbstractTile::json_to_movelogic can't find " << data->value.front()->to_string() << endl;
+		}
+	}
+	cerr << "AbstractTile::json_to_movelogic, not yet implemented." << endl;
+	//TODO implement parse
+	return moves;
+}
+
 #endif
 
 TILEDATATYPE& AbstractTile::get_id()
@@ -310,7 +506,10 @@ string AbstractTile::to_string() const
 	oss << "chemically stable:" << isChemicallyStable << endl;
 	oss << "positionally stable:" << isPositionStable << endl;
 	oss << "density:" << density << endl;
-	oss << "move logic:" << moveLogicLayers.size() << endl;
+	oss << "move logic:\n";
+	for (auto& layer : moveLogicLayers) {
+		oss << "\t" << layer << endl;
+	}
 	return oss.str();
 }
 
@@ -437,118 +636,4 @@ BasicTile::BasicTile(TILEDATATYPE id)
 
 BasicTile::~BasicTile()
 {
-}
-
-size_t TileManager::first_free = 0;
-vector<shared_ptr<AbstractTile>> TileManager::tiles{ 2 ^ (8 * sizeof(TILEDATATYPE)) };
-
-//TileManager::tiles.at(0) = make_shared<BoringTile>(0);
-
-shared_ptr<AbstractTile> TileManager::at(TILEDATATYPE key)
-{
-#ifdef VEC_UNSAFE
-	shared_ptr<AbstractTile> tile = tiles[key];
-	return tile ? tile : tiles[0];
-#else
-	shared_ptr<AbstractTile> tile = tiles.at(key);
-	return tile ? tile : tiles.at(0);
-#endif
-}
-
-bool TileManager::add(shared_ptr<AbstractTile> tile)
-{
-	if (!tile) {
-		return false;
-	}
-	tile->get_id() = first_free;
-	tiles.at(first_free++) = tile;
-	return true;
-}
-
-bool TileManager::add(list<shared_ptr<AbstractTile>>& tile)
-{
-	for (auto t : tile) {
-		tiles.at(first_free++) = t;
-	}
-	return true;
-}
-
-#ifdef JSON_PARSE_H
-bool TileManager::add(const string& filename)
-{
-	ifstream ifs{ filename };
-	if (!(ifs.good())) {
-		cerr << "can't read from: " << filename << endl;
-		return false;
-	}
-	JsonObject* tile_properties = nullptr;
-	ifs >> tile_properties;
-	if (!tile_properties) {
-		cerr << "read error from: " << filename << endl;
-		return false;
-	}
-	unique_ptr<JsonObject> smt_decon = unique_ptr<JsonObject>( tile_properties );
-	if (tile_properties->get_data_type() != JsonType::LIST) {
-		cerr << "json format incorrect," << (size_t)(tile_properties->get_data_type()) << " expected list: " << filename << endl;
-		return false;
-	}
-#ifdef VERBOSE
-	cerr << tile_properties->to_string() << endl;
-#endif
-	for (auto& tile : ((JsonList*)tile_properties)->value){
-#ifdef VERBOSE
-		cerr << "New substance added" <<  tile->to_string() << endl;
-#endif
-		try {
-			if (tile->get_data_type() != JsonType::TREE) {
-				cerr << "json format incorrect, expected map/dictionary: " << filename << endl;
-				continue;
-			}
-			auto& tile_p = ((JsonTree*)tile.get())->value;
-			shared_ptr<AbstractTile> temp_tile = make_shared<BasicTile>(0);
-			temp_tile->get_displayChar() = tile_p.at("char")->to_string().at(0);
-			temp_tile->get_name() = tile_p.at("name")->to_string();
-			temp_tile->get_updateFrequency() = (size_t)(((JsonDouble*)(tile_p.at("update frequency").get()))->value);
-			//temp_tile->get_chemicalReactions() = json_to_chemreaction((JsonTree*)tile_p.at("chemical reactions"));
-			temp_tile->get_isPositionStable() = tile_p.at("position stable")->to_string().at(0) == 't';
-			temp_tile->get_isChemicallyStable() = tile_p.at("chemical stable")->to_string().at(0) == 't';
-			temp_tile->get_density() = (int)(((JsonDouble*)(tile_p.at("density").get()))->value);
-			//temp_tile->get_moveLogicLayers() = json_to_movelogic((JsonTree*)tile_p.at("move logic"));
-			add(temp_tile);
-		}
-		catch (const exception& e) {
-			cerr << "tile property json format error, " << e.what() << endl;
-		}
-	}
-	return true;
-}
-#endif
-
-TILEDATATYPE TileManager::find(const string& name)
-{
-	for (size_t i = 0; i < tiles.size(); i++) {
-		if (tiles.at(i)->get_name() == name) {
-			return (TILEDATATYPE)i;
-		}
-	}
-	return (TILEDATATYPE)0;
-}
-
-TILEDATATYPE TileManager::find(char chr)
-{
-	for (size_t i = 0; i < tiles.size(); i++) {
-		if (tiles.at(i)->get_displayChar() == chr) {
-			return (TILEDATATYPE)i;
-		}
-	}
-	return (TILEDATATYPE)0;
-}
-
-string TileManager::to_string()
-{
-	ostringstream oss;
-	for (size_t i = 0; i < first_free; i++) {
-		oss << tiles.at(i)->to_string() << endl;
-	}
-	return oss.str();
 }

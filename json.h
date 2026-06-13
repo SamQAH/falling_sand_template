@@ -63,6 +63,7 @@ public:
 	virtual ~JsonDouble() = default;
 };
 
+// creates a JsonObject in acc from in, does nothing if parse is unsucessful
 istream& operator>>(istream& in, JsonObject*& acc);
 
 #endif

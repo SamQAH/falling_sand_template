@@ -1,8 +1,10 @@
 #include"tile.h"
+#include"tile_manager.h"
 #include"logic.h"
 #include"viewer.h"
 #include"json.h"
 #include"config.h"
+
 void test() {
 	//JsonObject* obj = nullptr;
 	ifstream ifs{ "tile_properties.json" };
@@ -10,6 +12,10 @@ void test() {
 		cerr << "can not open json" << endl;
 	}
 	else {
+		//istringstream iss{ "-5," };
+		//double temp;
+		//iss >> temp;
+		//cerr << "test " << temp << endl;
 		//cerr << "opened json" << endl;
 		//ifs >> (JsonObject*&)obj;
 		//cerr << obj->to_string();

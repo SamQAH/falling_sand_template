@@ -66,7 +66,7 @@ bool getJsonTree(istream& in, JsonTree& tree) {
 			error_str << "separator character read failed.";
 			failed = true;
 		}
-		if (in && colon == ':' && (next == ',' || next == '}')) {
+		if (in && colon == ':' && (next == ',' || next == '}') && key->get_data_type() == JsonType::STRING) {
 			tree.value.emplace( static_cast<string>(*key), val);
 		}
 		else {
@@ -76,6 +76,9 @@ bool getJsonTree(istream& in, JsonTree& tree) {
 			}
 			else if (next != ',' && next != '}') {
 				cerr << "Expected , or } , \'" << colon << "\' found.";
+			}
+			else if (key->get_data_type() != JsonType::STRING) {
+				cerr << "key must be a string.";
 			}
 			else {
 				cerr << "failed read.";

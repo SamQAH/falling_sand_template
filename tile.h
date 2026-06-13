@@ -20,7 +20,7 @@ enum TileType : TILEDATATYPE
 
 typedef vector<vector<TileType>> MAPTYPE;
 
-// bitpacked pair of 2 'shortshort' used as relatice coords
+// bitpacked pair of 2 'shortshort' used as relative coords
 enum DirectionVector : uint8_t {
 	UP = (1 << 4) + 0,
 	DOWN = (1 << 4) + 2,
@@ -32,10 +32,22 @@ enum DirectionVector : uint8_t {
 	Q4 = (2 << 4) + 2,
 	ZERO
 };
+istream& operator>>(istream& in, DirectionVector& direction);
+ostream& operator<<(ostream& out, const DirectionVector& direction);
+
+/* will attempt to move in the direction if roll succeeds
+* if going up has a 20% chance and going down has a 50% chance, the probs should be 0.2, 0.7
+*/
 struct MoveLogicProbabilityLayer {
 	vector<DirectionVector> choices;
 	vector<float> probs;
 };
+istream& operator>>(istream& in, MoveLogicProbabilityLayer& move);
+ostream& operator<<(ostream& out, const MoveLogicProbabilityLayer& move);
+MoveLogicProbabilityLayer operator*(float a, const MoveLogicProbabilityLayer& b);
+bool operator==(const MoveLogicProbabilityLayer& a, const MoveLogicProbabilityLayer& b);
+
+
 /* physical movement logic
 */
 struct TileMovementProperties {
@@ -97,25 +109,31 @@ extern map<TileType, char> tile_display_char;
 extern map<TileType, string> tile_string;
 extern map<string, TileType> string_tile;
 extern map<TileType, TileProperties> tile_properties;
+extern map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options;
 
 struct Location {
 	int col;
 	int row;
 	TileType tp;
 };
+istream& operator>>(istream& in, Location& loc);
+ostream& operator<<(ostream& out, const Location& loc);
+bool operator==(const Location& a, const Location& b);
+
+
 // not used
 class AbstractTile {
 	friend class TileManager;
 protected:
-	TILEDATATYPE id;
-	char displayChar;
-	string name;
-	size_t updateFrequency;
-	map<TileType, vector<ChemReaction>> chemicalReactions;
-	bool isChemicallyStable;
-	bool isPositionStable;
-	int density;
-	list<MoveLogicProbabilityLayer> moveLogicLayers;
+	TILEDATATYPE id; // unique identifier set by TileManager
+	char displayChar; // character to be printed in the cli
+	string name; // name or description of the tile
+	size_t updateFrequency; // every how many should logic call iterLogic, 0 is never
+	map<TileType, vector<ChemReaction>> chemicalReactions; // 
+	bool isChemicallyStable; // Logic will not call chemIterLogic
+	bool isPositionStable; // Logic will not call moveIterLogic
+	int density; // determines the settling behaviors of fluids
+	list<MoveLogicProbabilityLayer> moveLogicLayers; // determines behaviour of moveIterLogic
 	virtual list<Location> chemIterLogic(function<TileType(int, int)> get);
 	virtual list<Location> moveIterLogic(function<TileType(int, int)> get);
 	virtual list<Location> extraIterLogic(function<TileType(int, int)> get);
@@ -123,6 +141,8 @@ public:
 	AbstractTile();
 #ifdef JSON_PARSE_H
 	AbstractTile(JsonTree& data);
+	static map<TileType, vector<ChemReaction>> json_to_chemreaction(const JsonTree* data);
+	static list<MoveLogicProbabilityLayer> json_to_movelogic(const JsonList* data);
 #endif
 	virtual ~AbstractTile() = 0;
 	TILEDATATYPE& get_id();
@@ -150,25 +170,6 @@ public:
 	//virtual list<Location> iterLogic(function<TileType(int, int)> get);
 	//virtual string to_string() const;
 };
-
-// TileManager, manages tile information, must use this class to access
-class TileManager {
-private:
-	static size_t first_free;
-	static vector<shared_ptr<AbstractTile>> tiles;
-
-public:
-	static shared_ptr<AbstractTile> at(TILEDATATYPE key);
-	static bool add(shared_ptr<AbstractTile> tile);
-	static bool add(list<shared_ptr<AbstractTile>>& tile);
-#ifdef JSON_PARSE_H
-	static bool add(const string& filename);
-#endif
-	static TILEDATATYPE find(const string& name);
-	static TILEDATATYPE find(char chr);
-	static string to_string();
-};
-
 
 
 // char to_display_char(tiletype) returns the byte representing the tiletype
