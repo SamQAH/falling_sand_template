@@ -32,16 +32,6 @@ map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options = {
 	},
 };
 
-/* reactions and movement
-{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::WATER, TileType::GROUND, TileType::STEAM}
-{ChemReactionType::ONE_TO_ONE, TileType::STEAM, TileType::BOOB, TileType::WATER, TileType::BOOB}
-{ChemReactionType::TWO_TO_TWO, TileType::LAVA, TileType::GROUND, TileType::LAVA, TileType::LAVA}
-
-{ {DirectionVector::DOWN}, {1} }
-{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.5, 1} }
-{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} }
-*/
-
 istream& operator>>(istream& in, DirectionVector& direction) {
 	string buffer = "";
 	in >> buffer;
@@ -253,7 +243,7 @@ list<Location> AbstractTile::extraIterLogic(function<TileType(int, int)> get)
 	return requests;
 }
 
-AbstractTile::AbstractTile() : id{ 0 }, displayChar{ '?' }, name{ "unknown" }, updateFrequency{ 0 }, chemicalReactions{ }, isPositionStable{ true }, density{ 2147483647 }, moveLogicLayers{ }
+AbstractTile::AbstractTile() : id{ 0 }, displayChar{ '?' }, name{ "unknown" }, updateFrequency{ 0 }, chemicalReactions{ }, isPositionStable{ true }, density{ -1 }, moveLogicLayers{ }
 {
 }
 

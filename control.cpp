@@ -5,29 +5,15 @@
 #include"json.h"
 #include"config.h"
 
-void test() {
-	//JsonObject* obj = nullptr;
-	ifstream ifs{ "tile_properties.json" };
-	if (!(ifs.good())) {
-		cerr << "can not open json" << endl;
-	}
-	else {
-		//istringstream iss{ "-5," };
-		//double temp;
-		//iss >> temp;
-		//cerr << "test " << temp << endl;
-		//cerr << "opened json" << endl;
-		//ifs >> (JsonObject*&)obj;
-		//cerr << obj->to_string();
-		ifs.close();
-		TileManager::add("tile_properties.json");
-		TileManager::add_reactions("tile_reactions.json");
-		cout << TileManager::to_string() << endl;
-	}
-
+void load_tiles() {
+	TileManager::add("tile_properties.json");
+	TileManager::add_reactions("tile_reactions.json");
+#ifdef DEBUG
+	cout << TileManager::to_string() << endl;
+#endif
 }
 int main() {
-	test();
+	load_tiles();
 	//cout << "Start." << endl;
 	Logic logic(20, 15);
 	Viewer viewer(cout, logic.get_active_map());
@@ -54,6 +40,8 @@ int main() {
 		iss >> temp_char;
 		switch (temp_char)
 		{
+			/* TODO save and load map from file
+			*/
 		case 'h':
 			cout << "printing help message" << endl;
 			cout << "[enter] to tick once" << endl;

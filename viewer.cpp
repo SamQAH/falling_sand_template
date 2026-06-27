@@ -34,7 +34,7 @@ void Viewer::set_data_source(MAPTYPE*& data) {
 
 void Viewer::print() {
 	MAPTYPE& map = *map_data;
-	//int display_height = map.size();
+	int display_height = map.size();
 	int display_width = map.at(0).size();
 #ifndef DEBUG
 	out << "\x1B[" << display_height + pre_num_logged + 3 << "A\x1B[0J";

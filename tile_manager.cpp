@@ -27,9 +27,6 @@ bool TileManager::add(shared_ptr<AbstractTile> tile)
 }
 
 #ifdef JSON_PARSE_H
-/* add tiles, not yet reactions
-* add reactions.json, need tiledatatype from element
-*/
 bool TileManager::add(const string& filename)
 {
 	unique_ptr<JsonObject> smt_decon = file_to_json(filename);

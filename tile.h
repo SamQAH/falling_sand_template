@@ -6,8 +6,6 @@
 
 typedef char TILEDATATYPE;
 typedef TILEDATATYPE TileType;
-
-
 typedef vector<vector<TileType>> MAPTYPE;
 
 // bitpacked pair of 2 'shortshort' used as relative coords
@@ -37,14 +35,8 @@ ostream& operator<<(ostream& out, const MoveLogicProbabilityLayer& move);
 MoveLogicProbabilityLayer operator*(float a, const MoveLogicProbabilityLayer& b);
 bool operator==(const MoveLogicProbabilityLayer& a, const MoveLogicProbabilityLayer& b);
 
+extern map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options; // some common movement types
 
-/* physical movement logic
-*/
-struct TileMovementProperties {
-	bool isPositionStable;
-	int density;
-	list<MoveLogicProbabilityLayer> logicLayers;
-};
 /* reaction types, indicates which of reagent_one, reagent_two, resultant_one, resultant_two to use
 * catalytic A + B -> A + C a type of synthesis
 * self-catalytic A + BOOB -> B special
@@ -63,7 +55,6 @@ enum ChemReactionType {
 	TWO_TO_TWO
 };
 /*
-* probability of reaction as a function of both reactivities
 * higher reactivity means higher chance of reaction succeeding
 */
 struct ChemReaction {
@@ -77,32 +68,8 @@ ostream& operator<<(ostream& out, const ChemReaction& cr);
 ChemReaction json_to_ChemReaction(unique_ptr<JsonObject>& obj);
 #endif
 
-struct TileChemicalProperties {
-	float reactivity;
-	map<TileType, vector<ChemReaction>> possible_reactions; // probably faster than vector<ChemReaction>
-};
-/* flattened summary
-updateFrequency
-possible_chemical_reactions
-positionally_stable
-density
-move_logic_layers, each layer has its own probabilities
+/* {col, row, TileType}
 */
-struct TileProperties {
-	int updateFrequency; // for logic module to know when to call
-	TileChemicalProperties chemProperties;
-	TileMovementProperties moveProperties;
-};
-//not used
-bool canFall(function<TileType(int, int)>);
-bool canFallUp(function<TileType(int, int)>);
-vector<int> canPyramid(function<TileType(int, int)>);
-vector<int> canPyramidUp(function<TileType(int, int)>);
-vector<int> canSpread(function<TileType(int, int)>);
-vector<int> canExpand(function<TileType(int, int)>);
-
-extern map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options;
-
 struct Location {
 	int col;
 	int row;
@@ -112,8 +79,10 @@ istream& operator>>(istream& in, Location& loc);
 ostream& operator<<(ostream& out, const Location& loc);
 bool operator==(const Location& a, const Location& b);
 
-
-// not used
+/* AbstractTile stores the basic properties of tiles:
+ * inherit from this class to implement iteration logic, order, or add new iteration logic
+ * Is the base pointer managed by TileManager
+ */
 class AbstractTile {
 	friend class TileManager;
 protected:
@@ -121,19 +90,19 @@ protected:
 	char displayChar; // character to be printed in the cli
 	string name; // name or description of the tile
 	size_t updateFrequency; // every how many should logic call iterLogic, 0 is never
-	map<TileType, vector<ChemReaction>> chemicalReactions; // 
+	map<TileType, vector<ChemReaction>> chemicalReactions; // stores the reactions with this as a reagent
 	bool isChemicallyStable; // Logic will not call chemIterLogic
 	bool isPositionStable; // Logic will not call moveIterLogic
 	int density; // determines the settling behaviors of fluids
-	list<MoveLogicProbabilityLayer> moveLogicLayers; // determines behavir of moveIterLogic
-	virtual list<Location> chemIterLogic(function<TileType(int, int)> get);
-	virtual list<Location> moveIterLogic(function<TileType(int, int)> get);
-	virtual list<Location> extraIterLogic(function<TileType(int, int)> get);
+	list<MoveLogicProbabilityLayer> moveLogicLayers; // determines behaviour of moveIterLogic
+	virtual list<Location> chemIterLogic(function<TileType(int, int)> get); // not implemented
+	virtual list<Location> moveIterLogic(function<TileType(int, int)> get); // not implemented
+	virtual list<Location> extraIterLogic(function<TileType(int, int)> get); // not implemented
 public:
 	AbstractTile();
-	bool add_to_chemreaction(ChemReaction& cr);
+	bool add_to_chemreaction(ChemReaction& cr); // if the reaction involves this tile, then chemicalReactions will now track it
 #ifdef JSON_PARSE_H
-	AbstractTile(JsonTree& data);
+	AbstractTile(JsonTree& data); // don't use
 	static list<MoveLogicProbabilityLayer> json_to_movelogic(const JsonList* data);
 #endif
 	virtual ~AbstractTile() = 0;
@@ -146,11 +115,17 @@ public:
 	bool& get_isChemicallyStable();
 	int& get_density();
 	list<MoveLogicProbabilityLayer>& get_moveLogicLayers();
+	/* requests iterLogic(get) processes the step for the tile at get(0, 0) in order:
+	* chemical sim: chemIterLogic
+	* physics sim: moveIterLogic
+	* emotional sim: extraIterLogic
+	*/
 	virtual list<Location> iterLogic(function<TileType(int, int)> get);
 	virtual string to_string() const;
 };
 
-// no chemical reactions, positionally stable
+/* BasicTile implements reaction and movement logic 
+ */
 class BasicTile : public AbstractTile {
 private:
 	virtual list<Location> chemIterLogic(function<TileType(int, int)> get);
@@ -162,16 +137,6 @@ public:
 	//virtual list<Location> iterLogic(function<TileType(int, int)> get);
 	//virtual string to_string() const;
 };
-
-
-
-/* requests TileIter(getFunction) processes the step for the tile at 0, 0
-* chemical sim: processes the TileChemicalProperties
-* physics sim: processes the TileMovementProperties
-* emotional sim: extra data tied to a few Locations
-* 
-*/
-list<Location> TileIter(function<TileType(int, int)> get);
 
 
 #endif // !TILE_H

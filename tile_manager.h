@@ -18,12 +18,14 @@ public:
 	static shared_ptr<AbstractTile> at(TILEDATATYPE key);
 	static bool add(shared_ptr<AbstractTile> tile); // adds tile to tiles.at(first_free)
 #ifdef JSON_PARSE_H
+	/* add tile properties from json, no reactions */
 	static bool add(const string& filename);
+	/* add reactions from json, assumes the tiles mentioned are already being managed */
 	static bool add_reactions(const string& filename);
 #endif
-	static TILEDATATYPE find(const string& name);
-	static TILEDATATYPE find(char chr);
-	static string to_string();
+	static TILEDATATYPE find(const string& name); // searches for a tile by name
+	static TILEDATATYPE find(char chr); // searches for a tile by displayChar
+	static string to_string(); // displays all currently managed tiles
 };
 
 #endif

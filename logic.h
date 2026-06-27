@@ -4,7 +4,8 @@
 #include"tile.h"
 #include"config.h"
 
-
+/* Logic coordinates a set of tiles 
+ */
 class Logic {
 	int width, height;
 	MAPTYPE map_1;
@@ -24,7 +25,8 @@ public:
 	void set_get_tile_relative(int width, int height);
 	TileType get_tile_at_relative(int width, int height);
 	bool in_range(int width, int height);
-
+	// TODO bool save_to_file(const string & filename);
+	// TODO bool load_from_file(const string & filename);
 private:
 	int relative_width, relative_height;
 	int step_count = 0;
