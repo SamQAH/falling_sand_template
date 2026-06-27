@@ -12,8 +12,8 @@
     "name": "empty",
     "char": " ",
     "update frequency": 0,
-    "position stable": "true",
-    "chemical stable": "true",
+    "position stable": "false",
+    "chemical stable": "false",
     "density": 0,
     "move logic": []
   },

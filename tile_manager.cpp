@@ -32,18 +32,11 @@ bool TileManager::add(shared_ptr<AbstractTile> tile)
 */
 bool TileManager::add(const string& filename)
 {
-	ifstream ifs{ filename };
-	if (!(ifs.good())) {
-		cerr << "can't read from: " << filename << endl;
-		return false;
-	}
-	JsonObject* tile_properties = nullptr;
-	ifs >> tile_properties;
+	unique_ptr<JsonObject> smt_decon = file_to_json(filename);
+	JsonObject* tile_properties = smt_decon.get();
 	if (!tile_properties) {
-		cerr << "read error from: " << filename << endl;
 		return false;
 	}
-	unique_ptr<JsonObject> smt_decon = unique_ptr<JsonObject>(tile_properties);
 	if (tile_properties->get_data_type() != JsonType::LIST) {
 		cerr << "json format incorrect," << (size_t)(tile_properties->get_data_type()) << " expected list: " << filename << endl;
 		return false;
@@ -78,10 +71,30 @@ bool TileManager::add(const string& filename)
 	}
 	return true;
 }
-
+//TODO fix
 bool TileManager::add_reactions(const string& filename)
 {
-
+	unique_ptr<JsonObject> smt_decon = file_to_json(filename);
+	JsonObject* reactions = smt_decon.get();
+	if (!reactions) {
+		return false;
+	}
+	if (reactions->get_data_type() != JsonType::LIST) {
+		cerr << "json format incorrect," << (size_t)(reactions->get_data_type()) << " expected list: " << filename << endl;
+		return false;
+	}
+#ifdef VERBOSE
+	cerr << reactions->to_string() << endl;
+#endif
+	for (auto& react : ((JsonList*)reactions)->value) {
+		ChemReaction cr = json_to_ChemReaction(react);
+#ifdef VERBOSE
+		cerr << "adding " << cr << endl;
+#endif
+		for (size_t i = 1; i < TileManager::first_free; i++) {
+			TileManager::at(i)->add_to_chemreaction(cr);
+		}
+	}
 	return true;
 }
 #endif

@@ -11,18 +11,23 @@ map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options = {
 	{"powder",
 		{
 			{{DirectionVector::DOWN}, {1}},
-			MoveLogicProbabilityLayer{ {DirectionVector::Q3, DirectionVector::Q4}, {0.45, 0.9} }
+			MoveLogicProbabilityLayer{ {DirectionVector::Q3, DirectionVector::Q4}, {0.45, 0.45} }
 		}
 	},
 	{"liquid",
 		{
 			MoveLogicProbabilityLayer{ {DirectionVector::DOWN}, {1} },
-			MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.45, 0.9} }
+			MoveLogicProbabilityLayer{ {DirectionVector::LEFT, DirectionVector::RIGHT}, {0.45, 0.45} }
 		}
 	},
 	{"gas",
 		{
-			MoveLogicProbabilityLayer{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.4, 0.6, 0.8} }
+			MoveLogicProbabilityLayer{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.3, 0.15, 0.2, 0.2} }
+		}
+	},
+	{"disperse",
+		{
+			MoveLogicProbabilityLayer{ {DirectionVector::UP, DirectionVector::DOWN, DirectionVector::LEFT, DirectionVector::RIGHT}, {0.2, 0.2, 0.2, 0.2} }
 		}
 	},
 };
@@ -127,10 +132,8 @@ istream& operator>>(istream& in, MoveLogicProbabilityLayer& move) {
 ostream& operator<<(ostream& out, const MoveLogicProbabilityLayer& move) {
 	auto miter = move.choices.begin();
 	auto piter = move.probs.begin();
-	float prev = 0;
 	while (miter != move.choices.end() && piter != move.probs.end()) {
-		out << *miter << " " << (*piter - prev) << ",";
-		prev = *piter;
+		out << *miter << " " << *piter << ",";
 		++miter;
 		++piter;
 	}
@@ -150,6 +153,15 @@ MoveLogicProbabilityLayer operator*(float a, const MoveLogicProbabilityLayer& b)
 
 bool operator==(const MoveLogicProbabilityLayer& a, const MoveLogicProbabilityLayer& b) {
 	return false;
+}
+
+ostream& operator<<(ostream& out, const ChemReaction& cr) {
+	out << "[" << TileManager::at(cr.reagent_one)->get_name();
+	out << "+" << TileManager::at(cr.reagent_two)->get_name();
+	out << "->" << TileManager::at(cr.resultant_one)->get_name();
+	out << "+" << TileManager::at(cr.resultant_two)->get_name();
+	out << "|" << cr.probability << "]";
+	return out;
 }
 
 istream& operator>>(istream& in, Location& loc) {
@@ -173,20 +185,68 @@ bool operator==(const Location& a, const Location& b) {
 	return a.col == b.col && a.row == b.row && a.tp == b.tp;
 }
 
+ChemReaction json_to_ChemReaction(unique_ptr<JsonObject>& obj)
+{
+	if (obj->get_data_type() != JsonType::TREE) {
+		string error = "json_to_ChemReaction expected object of type tree\n" + obj->to_string();
+		throw invalid_argument(error.c_str());
+	}
+	JsonTree* tempobj= (JsonTree*)obj.get();
+	if (tempobj->value.find("type") == tempobj->value.end() || tempobj->value.at("type")->get_data_type() != JsonType::STRING) {
+		string error = "json_to_ChemReaction missing string field: type\n" + obj->to_string();
+		throw invalid_argument(error.c_str());
+	}
+	if (tempobj->value.find("reaction") == tempobj->value.end() || tempobj->value.at("reaction")->get_data_type() != JsonType::LIST) {
+		string error = "json_to_ChemReaction missing list field: reaction\n" + obj->to_string();
+		throw invalid_argument(error.c_str());
+	}
+	if (tempobj->value.find("probability") == tempobj->value.end() || tempobj->value.at("probability")->get_data_type() != JsonType::DOUBLe) {
+		string error = "json_to_ChemReaction missing double field: probability\n" + obj->to_string();
+		throw invalid_argument(error.c_str());
+	}
+	string crt_str = tempobj->value.at("type")->to_string();
+	ChemReactionType crt = crt_str == "11" ? ChemReactionType::ONE_TO_ONE : ChemReactionType::TWO_TO_TWO; //TODO determine if ChemReactionType is used or not
+	auto& reaction_components = ((JsonList*)(tempobj->value.at("reaction").get()))->value;
+	float prob = (float)((JsonDouble*)(tempobj->value.at("probability").get()))->value;
+	vector<TileType> reaction_elements;
+	for (auto& r : reaction_components) {
+		TileType tt = TileManager::find(r->to_string());
+		reaction_elements.emplace_back(tt);
+	}
+	if (crt == ChemReactionType::ONE_TO_ONE) {
+		if (reaction_elements.size() != 2) {
+			string error = "json_to_ChemReaction reaction size error" + obj->to_string();
+			throw invalid_argument(error.c_str());
+		}
+		return ChemReaction{ crt, reaction_elements.at(0), reaction_elements.at(0), reaction_elements.at(1), reaction_elements.at(1), prob };
+	}
+	else if (crt == ChemReactionType::TWO_TO_TWO) {
+		if (reaction_elements.size() != 4) {
+			string error = "json_to_ChemReaction reaction size error" + obj->to_string();
+			throw invalid_argument(error.c_str());
+		}
+		return ChemReaction{ crt, reaction_elements.at(0), reaction_elements.at(1), reaction_elements.at(2), reaction_elements.at(3), prob };
+	}
+	else {
+		string error = "json_to_ChemReaction ChemReactionType error" + obj->to_string();
+		throw invalid_argument(error.c_str());
+	}
+	return ChemReaction();
+}
 
-// TODO
+
 list<Location> AbstractTile::chemIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
 	return requests;
 }
-// TODO
+
 list<Location> AbstractTile::moveIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
 	return requests;
 }
-// TODO
+
 list<Location> AbstractTile::extraIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
@@ -210,14 +270,32 @@ AbstractTile::AbstractTile(JsonTree& data)
 	moveLogicLayers = json_to_movelogic((JsonList*)data.value.at("move logic").get());
 }
 
-map<TileType, vector<ChemReaction>> AbstractTile::json_to_chemreaction(const JsonTree* data)
-{
-	map<TileType, vector<ChemReaction>> reactions;
+bool AbstractTile::add_to_chemreaction(ChemReaction& cr) {
+	if (cr.reagent_one != id && cr.reagent_two != id) {
+		return false;
+	}
+	ChemReaction temp_cr = cr;
+	if (cr.reagent_one != id) {
+		swap(temp_cr.reagent_one, temp_cr.reagent_two);
+		swap(temp_cr.resultant_one, temp_cr.resultant_two);
+	}
+	if (cr.reactionType == ChemReactionType::ONE_TO_ONE || cr.reactionType == ChemReactionType::SELF_CATALYTIC) {
+		if (chemicalReactions.find(TILE_SENTINAL) == chemicalReactions.end()) {
+			chemicalReactions.emplace(TILE_SENTINAL, vector<ChemReaction>());
+		}
+		chemicalReactions.at(TILE_SENTINAL).emplace_back(temp_cr);
+	}
+	else {
+		if (chemicalReactions.find(temp_cr.reagent_two) == chemicalReactions.end()) {
+			chemicalReactions.emplace(temp_cr.reagent_two, vector<ChemReaction>());
+		}
+		chemicalReactions.at(temp_cr.reagent_two).emplace_back(temp_cr);
+	}
 
-
-	return reactions;
+	return true;
 }
 
+//TODO implement parse
 list<MoveLogicProbabilityLayer> AbstractTile::json_to_movelogic(const JsonList* data)
 {
 	list<MoveLogicProbabilityLayer> moves;
@@ -233,7 +311,7 @@ list<MoveLogicProbabilityLayer> AbstractTile::json_to_movelogic(const JsonList* 
 		}
 	}
 	cerr << "AbstractTile::json_to_movelogic, not yet implemented." << endl;
-	//TODO implement parse
+	
 	return moves;
 }
 
@@ -284,6 +362,40 @@ list<MoveLogicProbabilityLayer>& AbstractTile::get_moveLogicLayers()
 	return moveLogicLayers;
 }
 
+BasicTile::BasicTile(TILEDATATYPE id)
+{
+	get_id() = id;
+}
+
+BasicTile::~BasicTile()
+{
+}
+
+string AbstractTile::to_string() const
+{
+	ostringstream oss;
+	oss << "Tile name:" << name << endl;
+	oss << "display char:" << displayChar << endl;
+	oss << "update frequency:" << updateFrequency << endl;
+	oss << "chemically stable:" << isChemicallyStable << endl;
+	oss << "positionally stable:" << isPositionStable << endl;
+	oss << "density:" << density << endl;
+	oss << "move logic:\n";
+	for (auto& layer : moveLogicLayers) {
+		oss << "\t" << layer << endl;
+	}
+	oss << "chemicalReactions:\n";
+	for (const auto& react : chemicalReactions) {
+		oss << "\t" << TileManager::at(react.first)->get_name() << endl;
+		for (const auto& r : react.second) {
+			oss << "\t\t" << r << endl;
+		}
+	}
+	return oss.str();
+}
+
+AbstractTile::~AbstractTile() {}
+
 list<Location> AbstractTile::iterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
@@ -307,33 +419,14 @@ list<Location> AbstractTile::iterLogic(function<TileType(int, int)> get)
 	return requests;
 }
 
-string AbstractTile::to_string() const
-{
-	ostringstream oss;
-	oss << "Tile name:" << name << endl;
-	oss << "display char:" << displayChar << endl;
-	oss << "update frequency:" << updateFrequency << endl;
-	oss << "chemicalReactions:" << chemicalReactions.size() << endl;
-	oss << "chemically stable:" << isChemicallyStable << endl;
-	oss << "positionally stable:" << isPositionStable << endl;
-	oss << "density:" << density << endl;
-	oss << "move logic:\n";
-	for (auto& layer : moveLogicLayers) {
-		oss << "\t" << layer << endl;
-	}
-	return oss.str();
-}
-
-AbstractTile::~AbstractTile() {}
-
 list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
 {
 	list<Location> requests;
-	map<TileType, vector<ChemReaction>>& chemRec = get_chemicalReactions();
+	auto& chemRec = get_chemicalReactions();
 	if (chemRec.size() == 0) return requests;
 	vector<Location> adjacencies = { Location{ 0, -1, get(0, -1) }, Location{ 0, 1, get(0, 1) }, Location{ -1, 0, get(-1, 0) }, Location{ 1, 0, get(1, 0) } };
 	for (auto adjIter = adjacencies.begin(); adjIter != adjacencies.end(); ++adjIter) {
-		auto iter = chemRec.find((TileType)get_id());
+		auto iter = chemRec.find(adjIter->tp);
 		if (iter == chemRec.end()) continue;
 		float random = (float)(rand() % 128) / 128;
 		vector<ChemReaction>& crt = iter->second;
@@ -342,9 +435,10 @@ list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
 		bool choosedReact = false;
 		for (size_t i = 0; i < crt.size(); i++) {
 			tempSum += crt.at(i).probability;
-			if (tempSum < random) {
+			if (random < tempSum) {
 				choosenReaction = crt.at(i);
 				choosedReact = true;
+				break;
 			}
 		}
 		if (!choosedReact) continue;
@@ -381,34 +475,33 @@ list<Location> BasicTile::chemIterLogic(function<TileType(int, int)> get)
 		}
 	}
 	// self reactions
-	for (int i = 0; i < 1; i++) {
-		auto iter = chemRec.find(tile(boob));
-		if (iter != chemRec.end()) {
-			vector<ChemReaction>& crt = iter->second;
-			float random = (float)(rand() % 128) / 128;
-			ChemReaction choosenReaction;
-			float tempSum = 0;
-			bool choosedReact = false;
-			for (size_t i = 0; i < crt.size(); i++) {
-				tempSum += crt.at(i).probability;
-				if (tempSum < random) {
-					choosenReaction = crt.at(i);
-					choosedReact = true;
-				}
+	for (auto iter = chemRec.find(TILE_SENTINAL); iter != chemRec.end(); iter = chemRec.end()) {
+		// roll to determine if self reaction will occur
+		vector<ChemReaction>& crt = iter->second;
+		float random = (float)(rand() % 128) / 128;
+		ChemReaction choosenReaction;
+		float tempSum = 0;
+		bool choosedReact = false;
+		for (size_t i = 0; i < crt.size(); i++) {
+			tempSum += crt.at(i).probability;
+			if (random < tempSum) {
+				choosenReaction = crt.at(i);
+				choosedReact = true;
+				break;
 			}
-			if (!choosedReact) break;
-			// self reaction will now occur
-switch (choosenReaction.reactionType)
-{
-case ChemReactionType::ONE_TO_ONE:
-	requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
-	break;
-case ChemReactionType::SELF_CATALYTIC:
-	requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
-	break;
-default:
-	break;
-}
+		}
+		if (!choosedReact) break;
+		// self reaction will now occur
+		switch (choosenReaction.reactionType)
+		{
+		case ChemReactionType::ONE_TO_ONE:
+			requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+			break;
+		case ChemReactionType::SELF_CATALYTIC:
+			requests.emplace_front(Location{ 0, 0, choosenReaction.resultant_one });
+			break;
+		default:
+			break;
 		}
 	}
 	return requests;
@@ -419,32 +512,31 @@ list<Location> BasicTile::moveIterLogic(function<TileType(int, int)> get)
 	list<Location> requests;
 	list<MoveLogicProbabilityLayer>& mvLayers = get_moveLogicLayers();
 	for (auto& tmp : mvLayers) {
+		// roll which direction to try to move
 		float random = (float)(rand() % 128) / 128;
 		size_t choice_index = 0;
 		float prob_sum = 0;
 		for (; choice_index < tmp.probs.size(); choice_index++) {
 			prob_sum += tmp.probs.at(choice_index);
-			if (prob_sum > random) break;
+			if (random < prob_sum) break;
 		}
 		if (choice_index == tmp.probs.size()) break;
+		// check if tile is able to move there
 		DirectionVector vec = tmp.choices.at(choice_index);
 		int vec_col = (int)(((uint8_t)vec) >> 4) - 1;
 		int vec_row = (int)(((uint8_t)vec) % 16) - 1;
 		TileType other_tile = get(vec_col, vec_row);
-		if (TileManager::at(other_tile)->get_density() > get_density()) continue;
+		auto other_tile_ptr = TileManager::at(other_tile);
+		if (other_tile_ptr->get_id() == 0 || other_tile_ptr->get_id() == get_id()) continue;
+		// additional roll for density
+		int momentum = abs(get_density());
+		int inertia = abs(other_tile_ptr->get_density());
+		if (momentum < inertia) continue;
+		
 		requests.emplace_back(Location{ 0, 0, other_tile });
-		requests.emplace_back(Location{ vec_col, vec_row, (TileType)get_id() });
+		requests.emplace_back(Location{ vec_col, vec_row, get_id() });
 		break;
 
 	}
 	return requests;
-}
-
-BasicTile::BasicTile(TILEDATATYPE id)
-{
-	get_id() = id;
-}
-
-BasicTile::~BasicTile()
-{
 }

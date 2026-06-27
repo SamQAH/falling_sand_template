@@ -1,5 +1,17 @@
 [
   {
-
+    "type": "22",
+    "reaction": [ "lava", "water", "ground", "steam" ],
+    "probability": 0.95
+  },
+  {
+    "type": "11",
+    "reaction": [ "steam", "water" ],
+    "probability": 0.005
+  },
+  {
+    "type": "22",
+    "reaction": [ "lava", "ground", "lava", "lava" ],
+    "probability": 0.05
   }
 ]

@@ -71,6 +71,12 @@ struct ChemReaction {
 	TileType reagent_one, reagent_two, resultant_one, resultant_two;
 	float probability;
 };
+ostream& operator<<(ostream& out, const ChemReaction& cr);
+
+#ifdef JSON_PARSE_H
+ChemReaction json_to_ChemReaction(unique_ptr<JsonObject>& obj);
+#endif
+
 struct TileChemicalProperties {
 	float reactivity;
 	map<TileType, vector<ChemReaction>> possible_reactions; // probably faster than vector<ChemReaction>
@@ -125,9 +131,9 @@ protected:
 	virtual list<Location> extraIterLogic(function<TileType(int, int)> get);
 public:
 	AbstractTile();
+	bool add_to_chemreaction(ChemReaction& cr);
 #ifdef JSON_PARSE_H
 	AbstractTile(JsonTree& data);
-	static map<TileType, vector<ChemReaction>> json_to_chemreaction(const JsonTree* data);
 	static list<MoveLogicProbabilityLayer> json_to_movelogic(const JsonList* data);
 #endif
 	virtual ~AbstractTile() = 0;

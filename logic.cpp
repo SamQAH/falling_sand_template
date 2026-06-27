@@ -133,9 +133,9 @@ bool Logic::set_tile_at(int width, int height, TileType tp) {
 
 TileType Logic::get_tile_at(int width, int height) {
 #ifdef VEC_UNSAFE
-	return in_range(width, height) ? (*active_map)[height][width] : tile(boob);
+	return in_range(width, height) ? (*active_map)[height][width] : TILE_SENTINAL
 #else
-	return in_range(width, height) ? active_map->at(height).at(width) : tile(boob);
+	return in_range(width, height) ? active_map->at(height).at(width) : TILE_SENTINAL;
 #endif
 }
 
