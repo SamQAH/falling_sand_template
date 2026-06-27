@@ -1,20 +1,44 @@
 #include"tile.h"
+#include"tile_manager.h"
 #include"logic.h"
 #include"viewer.h"
+#include"json.h"
 #include"config.h"
 
+void test() {
+	//JsonObject* obj = nullptr;
+	ifstream ifs{ "tile_properties.json" };
+	if (!(ifs.good())) {
+		cerr << "can not open json" << endl;
+	}
+	else {
+		//istringstream iss{ "-5," };
+		//double temp;
+		//iss >> temp;
+		//cerr << "test " << temp << endl;
+		//cerr << "opened json" << endl;
+		//ifs >> (JsonObject*&)obj;
+		//cerr << obj->to_string();
+		ifs.close();
+		TileManager::add("tile_properties.json");
+		TileManager::add_reactions("tile_reactions.json");
+		cout << TileManager::to_string() << endl;
+	}
+
+}
 int main() {
+	test();
+	//cout << "Start." << endl;
 	Logic logic(20, 15);
 	Viewer viewer(cout, logic.get_active_map());
 
-	logic.set_tiles_rect(2, 1, 16, 3, TileType::WATER);
-	logic.set_tiles_rect(5, 5, 10, 7, TileType::GROUND);
-	logic.set_tiles_rect(6, 6, 8, 4, TileType::LAVA);
+	logic.set_tiles_rect(2, 1, 16, 3, tile(water));
+	logic.set_tiles_rect(5, 5, 10, 7, tile(ground));
+	logic.set_tiles_rect(6, 6, 8, 4, tile(lava));
 
 	bool running = true;
-	TileType tp = TileType::EMPTY;
+	TileType tp = tile(empty);
 	while (running) {
-		//system("cls");
 		viewer.print();
 		string buffer;
 		int temp_a;
@@ -24,25 +48,32 @@ int main() {
 		auto time_end = chrono::high_resolution_clock::now();
 		chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
 		bool use_full_step = true;
-
+		cout << ">>";
 		getline(cin, buffer);
 		istringstream iss{ buffer };
 		iss >> temp_char;
 		switch (temp_char)
 		{
+		case 'h':
+			cout << "printing help message" << endl;
+			cout << "[enter] to tick once" << endl;
+			cout << "s <row> <col> <name> \tsets the tile <name> at the coordinates" << endl;
+			cout << "t <n> \t ticks n times" << endl;
+			cout << "k \tswitches tick to tick all locations once" << endl;
+			break;
 		case 'd':
 			running = false;
 			break;
 		case 's':
 			iss >> temp_a >> temp_b >> buffer;
 			try {
-				tp = string_tile.at(buffer);
+				tp = TileManager::find(buffer);
+				viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
+				logic.set_tile_at(temp_a, temp_b, tp);
 			}
-			catch (int e) {
+			catch (const out_of_range& e) {
 				viewer << ("Can not convert:" + buffer + " into TileType.");
 			}
-			viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
-			logic.set_tile_at(temp_a, temp_b, tp);
 			break;
 		case 't':
 			iss >> temp_a;

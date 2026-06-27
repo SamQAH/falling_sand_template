@@ -1,0 +1,74 @@
+[
+  {
+    "name": "boob",
+    "char": "#",
+    "update frequency": 0,
+    "position stable": "true",
+    "chemical stable": "true",
+    "density": 10000,
+    "move logic": []
+  },
+  {
+    "name": "empty",
+    "char": " ",
+    "update frequency": 0,
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": 0,
+    "move logic": []
+  },
+  {
+    "name": "ground",
+    "char": "=",
+    "update frequency": 0,
+    "position stable": "true",
+    "chemical stable": "true",
+    "density": 100,
+    "move logic": []
+  },
+  {
+    "name": "water",
+    "char": ".",
+    "update frequency": 2,
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": 50,
+    "move logic": [ "liquid" ]
+  },
+  {
+    "name": "steam",
+    "char": "'",
+    "update frequency": 2,
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": -5,
+    "move logic": [ "gas" ]
+  },
+  {
+    "name": "lava",
+    "char": "L",
+    "update frequency": 10,
+    "position stable": "false",
+    "chemical stable": "false",
+    "density": 90,
+    "move logic": [ "liquid" ]
+  },
+  {
+    "name": "sand",
+    "char": "s",
+    "update frequency": 20,
+    "position stable": "false",
+    "chemical stable": "true",
+    "density": 10,
+    "move logic": [ "powder" ]
+  },
+  {
+    "name": "sticky powder",
+    "char": "S",
+    "update frequency": 20,
+    "position stable": "false",
+    "chemical stable": "true",
+    "density": 10,
+    "move logic": [ "gravity only" ]
+  }
+]
