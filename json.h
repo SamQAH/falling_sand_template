@@ -66,4 +66,6 @@ public:
 // creates a JsonObject in acc from in, does nothing if parse is unsucessful
 istream& operator>>(istream& in, JsonObject*& acc);
 
+unique_ptr<JsonObject> file_to_json(const string& filename);
+
 #endif

@@ -265,3 +265,22 @@ JsonType JsonObject::get_data_type() const
 {
 	return JsonType::JSON;
 }
+
+
+unique_ptr<JsonObject> file_to_json(const string& filename)
+{
+	unique_ptr<JsonObject> ptr = nullptr;
+	ifstream ifs{ filename };
+	if (!(ifs.good())) {
+		cerr << "can't read from: " << filename << endl;
+		return ptr;
+	}
+	JsonObject* tile_properties = nullptr;
+	ifs >> tile_properties;
+	if (!tile_properties) {
+		cerr << "read error from: " << filename << endl;
+		return ptr;
+	}
+	ptr = unique_ptr<JsonObject>(tile_properties);
+	return ptr;
+}
