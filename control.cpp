@@ -21,6 +21,7 @@ void test() {
 		//cerr << obj->to_string();
 		ifs.close();
 		TileManager::add("tile_properties.json");
+		TileManager::add_reactions("tile_reactions.json");
 		cout << TileManager::to_string() << endl;
 	}
 
@@ -47,12 +48,19 @@ int main() {
 		auto time_end = chrono::high_resolution_clock::now();
 		chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
 		bool use_full_step = true;
-
+		cout << ">>";
 		getline(cin, buffer);
 		istringstream iss{ buffer };
 		iss >> temp_char;
 		switch (temp_char)
 		{
+		case 'h':
+			cout << "printing help message" << endl;
+			cout << "[enter] to tick once" << endl;
+			cout << "s <row> <col> <name> \tsets the tile <name> at the coordinates" << endl;
+			cout << "t <n> \t ticks n times" << endl;
+			cout << "k \tswitches tick to tick all locations once" << endl;
+			break;
 		case 'd':
 			running = false;
 			break;
