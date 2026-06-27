@@ -16,8 +16,8 @@ Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { 
 		map_1.at(i) = vector<TileType>(width);
 		map_2.at(i) = vector<TileType>(width);
 		for (int j = 0; j < width; j++) {
-			map_1.at(i).at(j) = TileType::EMPTY;
-			map_2.at(i).at(j) = TileType::EMPTY;
+			map_1.at(i).at(j) = tile(empty);
+			map_2.at(i).at(j) = tile(empty);
 		}
 	}
 #endif
@@ -88,17 +88,11 @@ void Logic::step() {
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				if (!isCurrentLogicStep(row, col)) continue;
-				int tile_freq = tile_properties.at(active_map->at(row).at(col)).updateFrequency;
-				if (tile_freq <= 0 || (step_count / num_step_full) % (tile_freq + 1) != 0) continue;
+				size_t tile_freq = TileManager::at(active_map->at(row).at(col))->get_updateFrequency();
+				if (tile_freq == 0 || (step_count / num_step_full) % (tile_freq + 1) != 0) continue;
 				set_get_tile_relative(col, row);
-				list<Location> request_actions = TileIter(bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2));
-				// TODO compare request_actions with request_actions_2
 				auto get_f = bind(&Logic::get_tile_at_relative, this, placeholders::_1, placeholders::_2);
-				list<Location> request_actions_2 = TileManager::at(get_f(0,0))->iterLogic(get_f);
-				string diff = compare_locs_list(request_actions, request_actions_2);
-				if (diff.length() != 0) {
-					cout << "at row " << row << " col " << col << " difference is \n" << diff << endl;
-				}
+				list<Location> request_actions = TileManager::at(get_f(0,0))->iterLogic(get_f);
 				
 				for (auto& loc : request_actions) {
 					// cerr << loc.row << loc.col << to_string(loc.tp) << endl;
@@ -139,9 +133,9 @@ bool Logic::set_tile_at(int width, int height, TileType tp) {
 
 TileType Logic::get_tile_at(int width, int height) {
 #ifdef VEC_UNSAFE
-	return in_range(width, height) ? (*active_map)[height][width] : TileType::BOOB;
+	return in_range(width, height) ? (*active_map)[height][width] : tile(boob);
 #else
-	return in_range(width, height) ? active_map->at(height).at(width) : TileType::BOOB;
+	return in_range(width, height) ? active_map->at(height).at(width) : tile(boob);
 #endif
 }
 

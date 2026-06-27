@@ -5,18 +5,8 @@
 #include"json.h"
 
 typedef char TILEDATATYPE;
+typedef TILEDATATYPE TileType;
 
-enum TileType : TILEDATATYPE
-{
-	BOOB, // use as sentinal value
-	EMPTY,
-	GROUND,
-	WATER,
-	STEAM,
-	LAVA,
-	SAND,
-	STICKY_POWDER
-};
 
 typedef vector<vector<TileType>> MAPTYPE;
 
@@ -105,10 +95,6 @@ vector<int> canPyramidUp(function<TileType(int, int)>);
 vector<int> canSpread(function<TileType(int, int)>);
 vector<int> canExpand(function<TileType(int, int)>);
 
-extern map<TileType, char> tile_display_char;
-extern map<TileType, string> tile_string;
-extern map<string, TileType> string_tile;
-extern map<TileType, TileProperties> tile_properties;
 extern map<string, list<MoveLogicProbabilityLayer>> default_movelogic_options;
 
 struct Location {
@@ -133,7 +119,7 @@ protected:
 	bool isChemicallyStable; // Logic will not call chemIterLogic
 	bool isPositionStable; // Logic will not call moveIterLogic
 	int density; // determines the settling behaviors of fluids
-	list<MoveLogicProbabilityLayer> moveLogicLayers; // determines behaviour of moveIterLogic
+	list<MoveLogicProbabilityLayer> moveLogicLayers; // determines behavir of moveIterLogic
 	virtual list<Location> chemIterLogic(function<TileType(int, int)> get);
 	virtual list<Location> moveIterLogic(function<TileType(int, int)> get);
 	virtual list<Location> extraIterLogic(function<TileType(int, int)> get);
@@ -172,11 +158,6 @@ public:
 };
 
 
-// char to_display_char(tiletype) returns the byte representing the tiletype
-char to_display_char(const TileType tp);
-
-// string to_string(tiletype) returns the string representing the tiletype
-string to_string(const TileType tp);
 
 /* requests TileIter(getFunction) processes the step for the tile at 0, 0
 * chemical sim: processes the TileChemicalProperties

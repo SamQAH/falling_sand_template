@@ -31,12 +31,12 @@ int main() {
 	Logic logic(20, 15);
 	Viewer viewer(cout, logic.get_active_map());
 
-	logic.set_tiles_rect(2, 1, 16, 3, TileType::WATER);
-	logic.set_tiles_rect(5, 5, 10, 7, TileType::GROUND);
-	logic.set_tiles_rect(6, 6, 8, 4, TileType::LAVA);
+	logic.set_tiles_rect(2, 1, 16, 3, tile(water));
+	logic.set_tiles_rect(5, 5, 10, 7, tile(ground));
+	logic.set_tiles_rect(6, 6, 8, 4, tile(lava));
 
 	bool running = true;
-	TileType tp = TileType::EMPTY;
+	TileType tp = tile(empty);
 	while (running) {
 		viewer.print();
 		string buffer;
@@ -59,7 +59,7 @@ int main() {
 		case 's':
 			iss >> temp_a >> temp_b >> buffer;
 			try {
-				tp = string_tile.at(buffer);
+				tp = TileManager::find(buffer);
 				viewer << ("set tile " + to_string(tp) + " at " + to_string(temp_a) + ", " + to_string(temp_b));
 				logic.set_tile_at(temp_a, temp_b, tp);
 			}

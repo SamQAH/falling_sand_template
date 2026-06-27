@@ -1,5 +1,6 @@
 #include"viewer.h"
 #include"tile.h"
+#include"tile_manager.h"
 
 void enableANSI() {
 #ifdef _WIN32
@@ -33,7 +34,7 @@ void Viewer::set_data_source(MAPTYPE*& data) {
 
 void Viewer::print() {
 	MAPTYPE& map = *map_data;
-	int display_height = map.size();
+	//int display_height = map.size();
 	int display_width = map.at(0).size();
 #ifndef DEBUG
 	out << "\x1B[" << display_height + pre_num_logged + 3 << "A\x1B[0J";
@@ -47,7 +48,7 @@ void Viewer::print() {
 	for (auto& rows : map) {
 		out << h++ % 10;
 		for (auto& tile : rows) {
-			out << ' ' << to_display_char(tile);
+			out << ' ' << TileManager::at(tile)->get_displayChar();
 		}
 		out << '\n';
 	}

@@ -5,6 +5,8 @@
 #include"json.h"
 #include"tile.h"
 
+#define tile(x) TileManager::find(#x)
+
 // TileManager, manages tile information, must use this class to access
 class TileManager {
 private:
