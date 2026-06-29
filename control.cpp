@@ -29,7 +29,7 @@ int main() {
 		string buffer;
 		int temp_a;
 		int temp_b;
-		char temp_char = '\n';
+		string temp_word = "\n";
 		auto time_start = chrono::high_resolution_clock::now();
 		auto time_end = chrono::high_resolution_clock::now();
 		chrono::duration<double, std::milli> duration_ms = (time_end - time_start);
@@ -37,22 +37,21 @@ int main() {
 		cout << ">>";
 		getline(cin, buffer);
 		istringstream iss{ buffer };
-		iss >> temp_char;
-		switch (temp_char)
-		{
-			/* TODO save and load map from file
-			*/
-		case 'h':
-			cout << "printing help message" << endl;
-			cout << "[enter] to tick once" << endl;
-			cout << "s <row> <col> <name> \tsets the tile <name> at the coordinates" << endl;
-			cout << "t <n> \t ticks n times" << endl;
-			cout << "k \tswitches tick to tick all locations once" << endl;
-			break;
-		case 'd':
+		iss >> temp_word;
+		if (temp_word == "help") {
+			viewer << "printing help message";
+			viewer << "[enter] to tick once";
+			viewer << "quit \tto stop the program";
+			viewer << "set <row> <col> <name> \tsets the tile <name> at the coordinates";
+			viewer << "sprint <n> \t ticks n times";
+			viewer << "k \tswitches tick to not tick all locations once";
+			viewer << "save <filename> \tto save the current scene to a file";
+			viewer << "load <filename> \tto load a scene from filename";
+		} 
+		else if (temp_word == "quit" || temp_word == "exit" || temp_word == "stop" || temp_word == "d" || temp_word == "q") {
 			running = false;
-			break;
-		case 's':
+		} 
+		else if (temp_word == "set") {
 			iss >> temp_a >> temp_b >> buffer;
 			try {
 				tp = TileManager::find(buffer);
@@ -62,8 +61,8 @@ int main() {
 			catch (const out_of_range& e) {
 				viewer << ("Can not convert:" + buffer + " into TileType.");
 			}
-			break;
-		case 't':
+		} 
+		else if (temp_word == "sprint") {
 			iss >> temp_a;
 			time_start = chrono::high_resolution_clock::now();
 			for (int i = 0; i < temp_a; i++) {
@@ -72,17 +71,44 @@ int main() {
 			time_end = chrono::high_resolution_clock::now();
 			duration_ms = (time_end - time_start);
 			viewer << ("sprint: " + to_string(duration_ms.count()) + "ms");
-			break;
-		case 'k':
+		} 
+		else if (temp_word == "k") {
 			use_full_step = !use_full_step;
 			break;
-		default:
+		} 
+		else if (temp_word == "save") {
+			iss >> buffer;
+			try {
+				logic.save_to_file(buffer);
+			}
+			catch (const exception& e) {
+				viewer << e.what();
+			}
+		} 
+		else if (temp_word == "load") {
+			iss >> buffer;
+			try {
+				logic.load_from_file(buffer);
+			}
+			catch (const exception& e) {
+				viewer << e.what();
+			}
+			viewer.set_data_source(logic.get_active_map());
+		}
+		else if (temp_word == "new") {
+			iss >> temp_a >> temp_b;
+			logic = Logic(temp_a, temp_b);
+			viewer.set_data_source(logic.get_active_map());
+		}
+		else if (temp_word == "\n") {
 			time_start = chrono::high_resolution_clock::now();
 			use_full_step ? logic.full_step() : logic.step();
 			time_end = chrono::high_resolution_clock::now();
 			duration_ms = (time_end - time_start);
 			viewer << ("step: " + to_string(duration_ms.count()) + "ms");
-			break;
+		} 
+		else {
+			viewer << ("unknown command: " + temp_word);
 		}
 	}
 }

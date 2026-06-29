@@ -1,14 +1,16 @@
 #include"logic.h"
 #include"tile_manager.h"
 
-Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { (size_t)height }, map_2{ (size_t)height }, active_map{ &map_1 }, inactive_map{ &map_2 } {
+Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { (size_t)height }, map_2{ (size_t)height }, active_map{ &map_1 }, inactive_map{ &map_2 } 
+{
+	TileType empty_tile = tile(empty);
 #ifdef VEC_UNSAFE
 	for (int i = 0; i < height; i++) {
 		map_1[i] = vector<TileType>(width);
 		map_2[i] = vector<TileType>(width);
 		for (int j = 0; j < width; j++) {
-			map_1[i][j] = TileType::EMPTY;
-			map_2[i][j] = TileType::EMPTY;
+			map_1[i][j] = empty_tile;
+			map_2[i][j] = empty_tile;
 		}
 }
 #else
@@ -16,12 +18,30 @@ Logic::Logic(int width, int height) : width{ width }, height{ height }, map_1 { 
 		map_1.at(i) = vector<TileType>(width);
 		map_2.at(i) = vector<TileType>(width);
 		for (int j = 0; j < width; j++) {
-			map_1.at(i).at(j) = tile(empty);
-			map_2.at(i).at(j) = tile(empty);
+			map_1.at(i).at(j) = empty_tile;
+			map_2.at(i).at(j) = empty_tile;
 		}
 	}
 #endif
 
+}
+
+Logic::Logic(const Logic& other) :width{ other.width }, height{ other.height }, map_1{ other.map_1 }, map_2{ other.map_2 }, active_map{ &map_1 }, inactive_map{ &map_2 } 
+{
+
+}
+
+Logic& Logic::operator=(const Logic& other)
+{
+	Logic temp{ other };
+	swap(*this, temp);
+	return *this;
+}
+
+Logic& Logic::operator=(Logic&& other)
+{
+	swap(*this, other);
+	return *this;
 }
 
 void Logic::set_get_tile_relative(int width, int height) {
@@ -44,7 +64,17 @@ void Logic::full_step() {
 	}
 }
 
-// TODO remove, writen for debugging
+int Logic::get_width() const
+{
+	return width;
+}
+
+int Logic::get_height() const
+{
+	return height;
+}
+
+// TODO remove, writen for debugging Tile iteration
 string compare_locs_list(list<Location>& a, list<Location>& b) {
 	ostringstream oss;
 	if (a.size() != b.size()) {
@@ -131,7 +161,7 @@ bool Logic::set_tile_at(int width, int height, TileType tp) {
 
 }
 
-TileType Logic::get_tile_at(int width, int height) {
+TileType Logic::get_tile_at(int width, int height) const {
 #ifdef VEC_UNSAFE
 	return in_range(width, height) ? (*active_map)[height][width] : TILE_SENTINAL
 #else
@@ -158,6 +188,56 @@ bool Logic::set_tiles_rect(int width, int height, int wid, int hei, TileType tp)
 	}
 }
 
-bool Logic::in_range(int w, int h) {
+bool Logic::in_range(int w, int h) const {
 	return w >= 0 && h >= 0 && w < width && h < height;
+}
+
+bool Logic::save_to_file(const string& filename)
+{
+	ofstream ofs{ filename };
+	if (!(ofs.good())) {
+		string error = "logic could not save to: " + filename + "\n";
+		throw invalid_argument(error.c_str());
+	}
+	ofs << width << ' ' << height << endl;
+	for (auto& row : *active_map) {
+		for (auto& cell : row) {
+			ofs << TileManager::at(cell)->get_name() << ' ';
+		}
+		ofs << endl;
+	}
+	return true;
+}
+
+bool Logic::load_from_file(const string& filename)
+{
+	ifstream ifs{ filename };
+	if (!(ifs.good())) {
+		string error = "Logic failed to load from: " + filename + "\n";
+		throw invalid_argument(error.c_str());
+	}
+	int w, h;
+	string buffer;
+	ifs >> w >> h;
+	Logic temp{ w, h };
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			ifs >> buffer;
+			temp.set_tile_at(j, i, TileManager::find(buffer));
+		}
+	}
+	*this = temp;
+	return true;
+}
+
+void swap(Logic& a, Logic& b)
+{
+	bool a_active1 = a.active_map == &(a.map_1);
+	bool b_active1 = b.active_map == &(b.map_1);
+	swap(a.width, b.width);
+	swap(a.height, b.height);
+	swap(a.map_1, b.map_1);
+	swap(a.map_2, b.map_2);
+	a.active_map = b_active1 ? &a.map_1 : &a.map_2;
+	b.active_map = a_active1 ? &b.map_1 : &b.map_2;
 }

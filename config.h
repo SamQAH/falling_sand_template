@@ -1,3 +1,4 @@
+#include<algorithm>
 #include<chrono>
 #include<cmath>
 #include<cstdlib>
@@ -14,6 +15,7 @@
 #include<string>
 #include<thread>
 #include<unistd.h>
+#include<utility>
 #include<vector>
 
 #ifdef _WIN32
