@@ -18,12 +18,11 @@ void enableANSI() {
 #endif
 }
 
-Viewer::Viewer(ostream& out, MAPTYPE*& data) : out { out }, map_data { data }, log_once { }, pre_num_logged { 0 } {
+Viewer::Viewer(ostream& out, MAPTYPE*& data) : out{ out }, map_data{ data }, log_once{ }, pre_num_logged{ 0 }, to_start{} {
 	enableANSI();
-	for (size_t i = 0; i < map_data->size() + 4; i++) {
-		out << '\n';
-	}
+	out << "Viewer created" << '\n';
 }
+
 Viewer::~Viewer() {
 	// out << endl;
 }
@@ -37,7 +36,7 @@ void Viewer::print() {
 	int display_height = map.size();
 	int display_width = map.at(0).size();
 #ifndef DEBUG
-	out << "\x1B[" << display_height + pre_num_logged + 3 << "A\x1B[0J";
+	out << to_start;
 #endif
 	out << ' ';
 	for (int i = 0; i < display_width; i++) {
@@ -55,9 +54,11 @@ void Viewer::print() {
 	out << '\n';
 	pre_num_logged = 0;
 	for (auto& str : log_once) {
-		out << str << endl;
+		out << str << "\n";
 		pre_num_logged++;
 	}
+	out << flush;
+	to_start = ("\x1B[" + to_string(display_height + pre_num_logged + 3) + "A\x1B[0J");
 	log_once.clear();
 
 }
